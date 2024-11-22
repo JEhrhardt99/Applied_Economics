@@ -1,0 +1,393 @@
+\documentclass[a4paper, 12pt, twoside, english]{article} 
+
+
+% Incorporate the preamble
+\usepackage{preamble}
+
+
+
+%=============================================================================================================================================================================
+
+
+
+
+
+\begin{document}
+
+
+\def\biblio{} % resets the biblio command, if not here a new reference list will be produced after every chapter
+
+
+
+
+
+
+
+
+
+
+\begin{titlepage}
+	
+
+	\begin{center}
+	
+	\scshape % Use small caps for all text on the title page
+	\includegraphics[width=1 \linewidth]{IFME/Graphs/uniol_4c.pdf}
+	\vspace*{\baselineskip} % White space at the top of the page
+	\vspace{-1.5cm}
+	%------------------------------------------------
+	%	Title
+	%------------------------------------------------
+	
+	\rule{\textwidth}{1.6pt}\vspace*{-\baselineskip}\vspace*{2pt} % Thick horizontal rule
+	\rule{\textwidth}{0.4pt} % Thin horizontal rule
+	\vspace{-0.9cm}
+	\vspace{0.35\baselineskip} % Whitespace above the title
+	
+	{\rmfamily\scshape\LARGE  \textbf{Topic Title\\}} % Title
+	
+	\vspace{0.35\baselineskip} % Whitespace below the title
+	
+	\rule{\textwidth}{0.4pt}\vspace*{-\baselineskip}\vspace{3.2pt} % Thin horizontal rule
+	\rule{\textwidth}{1.6pt} % Thick horizontal rule
+	
+	\vspace{0.1\baselineskip} % Whitespace after the title block
+	
+	%------------------------------------------------
+	%	Subtitle
+	%------------------------------------------------
+
+    Own Subtitle% Subtitle or further description
+	
+	\vspace*{1.5\baselineskip} % Whitespace under the subtitle
+    
+    \end{center}
+    
+	%------------------------------------------------
+	%	Editor(s)
+	%------------------------------------------------
+
+            
+
+
+
+
+\begin{center}
+    \begin{minipage}[t]{0.45\textwidth}
+        \begin{flushleft}
+            \textbf{\underline{Author}:} \\
+            \textit{Jannes Ehrhardt (5257507)$^{\text{ \textbf{JE}}}$} \\
+            \textit{\href{mailto:jannes.ehrhardt@uni-oldenburg.de}{jannes.ehrhardt@uol.de}}
+        \end{flushleft}
+    \end{minipage}%
+    \hspace{0.1\textwidth}%
+    \begin{minipage}[t]{0.45\textwidth}
+        \begin{flushright}
+            \textbf{\underline{Supervising Examiner}:} \\
+            \textit{Prof. Dr. Hans-Michael Trautwein} \\
+            \textit{\href{mailto:hans.michael.trautwein@uni-oldenburg.de}{hans.michael.trautwein@uol.de}} \\
+        \end{flushright}
+    \end{minipage}
+    \vspace*{1\baselineskip}
+\end{center}
+
+
+
+
+
+
+
+
+	\begin{center}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+	\rmfamily\scshape   
+	   
+	   
+	   
+	\textbf{\Large{Applied Economics}} \\ 
+    (wir873) \\
+    \vspace{.4cm}
+	\textbf{Paper} \\
+    \vspace{.4cm}
+	Institute for Economics \\
+	
+	   
+	\vspace*{2.0\baselineskip} % vor Änderung das Uni-Logo war das hier eine 3 
+	
+	%------------------------------------------------
+	%	Publisher
+	% \includegraphics[width=1 \linewidth]{Graphs/uniol_4c.pdf}
+	%------------------------------------------------
+	
+	%\plogo % Publisher logo
+	
+	% \vspace{.7\baselineskip} % Whitespace under the publisher logo
+
+ \normalfont
+    Oldenburg, \today
+	
+	
+		\pagenumbering{Roman}
+%\addcontentsline{toc}{section}{Titlepage}   %einfügen ins Inhaltsverzeichnis
+	
+	\end{center}
+
+
+
+
+\end{titlepage}
+
+
+
+
+
+
+
+
+
+%\newpage
+%{\setstretch{1.25} 
+%\listoffigures}
+
+ 
+%\newpage
+%{\setstretch{1.25} 
+%\listoftables}
+
+\newpage
+\restoregeometry % restores the margins after frontpage
+%\nocite{*} % uncomment if you want all sources to be printed in the reference list, including the ones which are not cited in the text 
+
+\pagenumbering{gobble} % suppress page numbering
+\thispagestyle{plain} % suppress header
+%\clearpage\mbox{}\clearpage % add blank page
+
+\pagenumbering{Roman} % starting roman page numbering
+\newpage
+%\section*{Acknowledgements}
+%    \subfile{Vorwort/Acknowledgements}
+\setcounter{page}{2}   % start der seitenzahl im Abstract 
+%\newpage
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+    \subfile{Foreword/Abstract}
+
+
+\newpage
+
+
+\renewcommand{\contentsname}{\Large{Table of Contents}}
+\section*{}
+% \vspace{-1,5cm}
+\addcontentsline{toc}{section}{Table of Contents}
+{\setstretch{1.25} % line spacing for the list
+{\hypersetup{linkcolor=Black} % Make toc black even if general linkcolor is different
+\tableofcontents
+}
+}
+
+
+
+
+
+\newpage
+
+
+
+
+\renewcommand{\listfigurename}{\Large{List of Figures}}
+\section*{}
+% \vspace{-1,5cm}
+\addcontentsline{toc}{section}{List of Figures}
+{\setstretch{1.25}
+{\hypersetup{linkcolor=Black}
+\listoffigures
+}
+}
+
+
+
+
+\newpage
+
+
+
+
+\renewcommand{\listtablename}{\Large{List of Tables}}
+\section*{}
+% \vspace{-1,5cm}
+\addcontentsline{toc}{section}{List of Tables}
+{\setstretch{1.25}
+{\hypersetup{linkcolor=Black}
+\listoftables
+}
+}
+\newpage
+
+
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{4}} % sets depth of toc to 4, 1.1.1.1
+\pagenumbering{arabic} % Starting arabic page numbering
+\setcounter{page}{1} % sets pagecounter to 1
+
+
+
+
+
+%\newpage
+%\renewcommand\refname{References} % name for the reference list
+%{\setstretch{1.0} % linespacing for the references
+%\addcontentsline{toc}{section}{References} % to change the name of the references in the TOC
+%}
+
+%\newpage
+%\renewcommand{\appendixpagename}{Appendix} % Heading of appendix
+%\renewcommand{\appendixtocname}{Appendix} % name of appendix in TOC
+%\appendixpage 
+%\addappheadtotoc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\input{Contents/Section-1}
+
+\input{Contents/Section-2}
+
+\input{Contents/Section-3}
+
+\input{Contents/Section-4}
+
+\input{Contents/Section-5}
+
+% \input{Contents/Section-6}
+
+%\input{Contents/Section-7}
+%\newpage
+%\input{Contents/Section-8}
+%\newpage
+%\input{Contents/Section 9}
+%\newpage
+%\input{Contents/Section 10}
+%\newpage
+
+
+
+
+
+%\begin{appendix}
+
+
+%\renewcommand{\thesubsection}{A\arabic{subsection}}
+%\renewcommand{\thetable}{A\arabic{subsection}.\arabic{table}}
+%\counterwithin{table}{subsection}
+%\counterwithin{figure}{subsection}
+
+
+
+
+
+
+
+
+
+
+
+
+%==============================References===========================
+\newpage
+
+
+\vspace*{-1cm}
+% \addcontentsline{toc}{section}{References}
+
+
+%\renewcommand\refname{References} % name for the reference list
+%{\setstretch{1.0} % linespacing for the references
+%\addcontentsline{toc}{section}{References} % to change the name of the references in the TOC
+%\bibliography{References.bib} % adds the references to the document
+%}
+
+
+
+
+\sloppy
+
+\pagenumbering{Roman} % starting roman page numbering
+\setcounter{page}{6}
+
+
+\phantomsection
+\addcontentsline{toc}{section}{References}
+
+\printbibliography[title={References},
+%heading=bibintoc, 
+]
+\newpage
+
+\fussy
+%================================================================
+
+% \begin{appendix}
+
+
+
+
+
+
+
+
+
+
+\vspace*{-1.5cm}
+% \vspace{1.5cm}
+\appendix
+
+\section*{Appendix}
+\setcounter{section}{0}
+ \addcontentsline{toc}{section}{Appendix}
+\vspace*{0.5cm}
+% \renewcommand{\thesection}{}
+% \input{Appendix/Graphiken}
+% \newpage
+% \vspace*{-1.5cm}
+% \input{Appendix/Tables}
+% \newpage
+% \vspace*{-1.5cm}
+\input{Appendix/author_index}
+\newpage
+
+\input{Appendix/Declaration of Independence}
+
+% \end{appendix}
+
+% \newpage
+
+
+
+
+
+\end{document}
