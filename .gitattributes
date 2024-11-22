@@ -1,0 +1,2 @@
+Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml filter=lfs diff=lfs merge=lfs -text
+*.gz filter=lfs diff=lfs merge=lfs -text
