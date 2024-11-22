@@ -78,7 +78,7 @@ The remote repository from Tankerkönig ([tankerkoenig](https://dev.azure.com/ta
 #| output: false
 
 # move up to project root and read data from data subfolder
-df <- fread("../Data/Tankerkoenig/prices/2022/01/2022-01-01-prices.csv")
+df <- fread("../../Data/Tankerkoenig/prices/2022/01/2022-01-01-prices.csv")
 ```
 
 #### Data Preprocessing
@@ -165,7 +165,7 @@ Check if there is a pattern to the stations with such observations:
 unique(weird_obs$station_uuid)
 
 # load station data for the corresponding day to learn more
-df_stations <- fread("../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv")
+df_stations <- fread("../../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv")
 
 # subset the stations with the weird observations
 weird_stations <- df_stations %>%
@@ -184,10 +184,10 @@ First, I also want to check if these weird observations correspond to the same s
 #| output: true
 
 # price data for 2022-07-12
-df_2022_test <- fread("../Data/Tankerkoenig/prices/2022/07/2022-07-12-prices.csv")
+df_2022_test <- fread("../../Data/Tankerkoenig/prices/2022/07/2022-07-12-prices.csv")
 
 # load station data for the corresponding day to learn more
-df_stations2022_test <- fread("../Data/Tankerkoenig/stations/2022/07/2022-07-12-stations.csv")
+df_stations2022_test <- fread("../../Data/Tankerkoenig/stations/2022/07/2022-07-12-stations.csv")
 
 # correct time zone
 df_2022_test$date <- as.POSIXct(df_2022_test$date,
@@ -275,7 +275,7 @@ unique(df$station_uuid) %>% length()
 
 getwd()
 # Specify the subfolder
-subfolder <- "../Data/Tankerkoenig/prices_avg"
+subfolder <- "../../Data/Tankerkoenig/prices_avg"
 
 # save unique date as string to name the saved .csv like that
 
@@ -305,7 +305,7 @@ To be sure, I test if the saved data can be loaded again and the variables are r
 #| echo: true
 #| output: true
 
-test <- fread(paste0("../Data/Tankerkoenig/prices_avg/", unique_date_str, "-avg-price-station.csv.gz"))
+test <- fread(paste0("../../Data/Tankerkoenig/prices_avg/", unique_date_str, "-avg-price-station.csv.gz"))
 
 str(test)
 
@@ -329,8 +329,8 @@ start_date <- as.Date("2022-01-01")
 end_date <- as.Date("2022-12-31")
 
 # Define folder paths
-data_dir <- "../Data/Tankerkoenig/prices"
-output_dir <- "../Data/Tankerkoenig/prices_avg"
+data_dir <- "../../Data/Tankerkoenig/prices"
+output_dir <- "../../Data/Tankerkoenig/prices_avg"
 
 # Create output directory if it doesn't exist
 if (!dir.exists(output_dir)) {
@@ -388,15 +388,13 @@ while (current_date <= end_date) {
 
 ```
 
-
-
 ```{r}
 #| label: bind_avg_prices
 #| echo: true
 #| output: true
 
 # Schritt 1: Liste der Dateinamen
-path <- "../Data/Tankerkoenig/prices_avg"  # Pfad zum Ordner
+path <- "../../Data/Tankerkoenig/prices_avg"  # Pfad zum Ordner
 files <- list.files(path, pattern = "\\.csv\\.gz$", full.names = TRUE)
 
 # Schritt 2: Dateien einlesen und Schritt 3: Zusammenführen
@@ -407,17 +405,9 @@ combined_data <- combined_data[order(station_uuid, date_only)]
 
 # Schritt 4: Speichern
 fwrite(combined_data,
-       "../Data/Tankerkoenig/prices_avg/Combined/daily_avg_prices_GER.csv.gz",
+       "../../Data/Tankerkoenig/prices_avg/Combined/daily_avg_prices_GER.csv.gz",
        row.names = FALSE)
 ```
-
-
-
-
-
-
-
-
 
 #### Stations Data
 
@@ -438,7 +428,7 @@ I start by merging the separate station data files, since I have not yet receive
 #| output: true
 
 # load the station data for day 1
-df_stations_day1 <- fread("../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv")
+df_stations_day1 <- fread("../../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv")
 
 # write a for loop that iterates over all days in the year 2022, taking the folder structure into account
 
@@ -473,7 +463,7 @@ df_stations_day1 <- fread("../Data/Tankerkoenig/stations/2022/01/2022-01-01-stat
 
 # Create a list of file paths for all days in 2022
 days <- seq(as.Date("2022-01-01"), as.Date("2022-12-31"), by = "days")
-file_paths <- sprintf("../Data/Tankerkoenig/stations/%s-stations.csv", format(days, "%Y/%m/%Y-%m-%d"))
+file_paths <- sprintf("../../Data/Tankerkoenig/stations/%s-stations.csv", format(days, "%Y/%m/%Y-%m-%d"))
 
 
 # Use lapply to read all files into a list of data.tables
@@ -501,7 +491,6 @@ The following variables will be omitted:
 
 -   `openingtimes_json`
 
-
 ```{r}
 #| label: omit_station_vars
 #| echo: true
@@ -514,14 +503,7 @@ df_stations <- df_stations[, -c("street", "house_number", "first_active", "openi
 str(df_stations)
 ```
 
-
-
-
-
-
-Now let's better understand the data and it's structure. First, I would like to know how many stations are there on the first day of the year, then I would like to know how many stations were there on the last day of the year. 
-
-
+Now let's better understand the data and it's structure. First, I would like to know how many stations are there on the first day of the year, then I would like to know how many stations were there on the last day of the year.
 
 ```{r}
 #| label: station_counts_day1
@@ -547,11 +529,7 @@ cat("Number of stations on the last day of the year:", stations_day_last, "\n")
 cat("Total difference in stations: +", stations_day_last - stations_day1, "\n")
 ```
 
-
-
-
 After this, I would even like to know more about the fluctuations in the number of stations over the year, to test the argument that stations (and also competition) is relevantly constant over time. This can only be the case, if there are not many fluctuations. Therefore, I calculate the number of stations for every day in the year 2022 and plot the results using ggplot2.
-
 
 ```{r}
 #| label: station_counts_over_year
@@ -605,9 +583,7 @@ ggplot(stations_over_year, aes(x = date, y = num_stations)) +
 
 ```
 
-
 How many brands are there in the data set? How are their numbers distributed?
-
 
 ```{r}
 #| label: brand_count
@@ -635,8 +611,7 @@ print(top_brands_stations)
 
 ```
 
-Here it can be seen that the third most common brand is simply shown an empty string in the variable `brand`, implying that there are 1193 stations that are not owned by a brand. In what follows, I assign these stations the brand name "No Brand". Furthermore, I repeat the steps from above searching for the top 11 brands, to identify the actual top 10 brands (No Brand excluded). 
-
+Here it can be seen that the third most common brand is simply shown an empty string in the variable `brand`, implying that there are 1193 stations that are not owned by a brand. In what follows, I assign these stations the brand name "No Brand". Furthermore, I repeat the steps from above searching for the top 11 brands, to identify the actual top 10 brands (No Brand excluded).
 
 ```{r}
 #| label: brand_count2
@@ -666,11 +641,7 @@ print(top_brands_stations)
 
 ```
 
-
-
 Now, how do the fluctuations of station counts look across the top brand? Are there any brands that actively whiden their market share in terms of stations?
-
-
 
 ```{r}
 #| label: fluctuations_topbrands
@@ -700,8 +671,6 @@ ggplot(brand_station_trends, aes(x = date, y = num_stations, color = brand)) +
 
 
 ```
-
-
 
 What's up with this peak of stations for the brand "No Brand" in the middle of the year? Let's find out:
 
@@ -777,7 +746,6 @@ unique(Stations_that_changed$city)
 # There seems to be no pattern, at least not directly
 ```
 
-
 A short assessment does not show any pattern to why there are some stations that are assigned to "No Brand" on 2022-05-26 and are assigned to a brand on 2022-05-27. It is likely an error in the raw data. Further research could asses this in more detail, plotting a map of the stations that are affected, maybe revealing any spatial patterns. This is however not important for the further assessment of my research question and can therefore be disregarded.
 
 ```{r}
@@ -789,7 +757,6 @@ A short assessment does not show any pattern to why there are some stations that
 rm(list = setdiff(ls(), "df_stations"))
 ```
 
-
 Save the stations data to later merge it with price data
 
 ```{r}
@@ -798,119 +765,24 @@ Save the stations data to later merge it with price data
 #| output: true
 
 # save the data
-fwrite(df_stations, "../Data/Tankerkoenig/stations/2022/preprocessed/stations_2022.csv.gz",
+fwrite(df_stations, "../../Data/Tankerkoenig/stations/2022/preprocessed/stations_2022.csv.gz",
        row.names = FALSE)
 ```
 
 
 ## Prix des carburants en France
 
-### Small Working Example
-
-#### Loading Data
-
-```{r}
-#| label: Prix_Load
-#| echo: true
-#| output: false
-
-# getwd()
-# # load the data
-# df_FRA <- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.csv")
-# 
-# df_FRA2 <- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v3.csv")
-# 
-# # library(jsonlite)
-# json_data <- fromJSON("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.json", flatten = TRUE)
-# 
-# str(json_data)
-# 
-# dt <- as.data.table(json_data)
-# 
-# str(dt)
-```
-
-#### Cleaning Data
-
-```{r}
-#| label: Clean_FRA
-#| echo: true
-#| output: true
-
-# give a list of the variable names
-# names(df_FRA)
-# 
-# # Aim: Clean rename the colums to English 
-# 
-# # Convert the data frame to a data.table for efficiency
-# setDT(df_FRA)
-# 
-# # Rename columns
-# setnames(df_FRA, 
-#          old = c("id", "latitude", "longitude", "Code postal", "pop", "Adresse", 
-#                  "Ville", "services", "prix", "rupture", "horaires", "geom", 
-#                  "Prix Gazole mis à jour le", "Prix Gazole", 
-#                  "Prix SP95 mis à jour le", "Prix SP95", 
-#                  "Prix E85 mis à jour le", "Prix E85", 
-#                  "Prix GPLc mis à jour le", "Prix GPLc", 
-#                  "Prix E10 mis à jour le", "Prix E10", 
-#                  "Prix SP98 mis à jour le", "Prix SP98", 
-#                  "Début rupture e10 (si temporaire)", "Type rupture e10", 
-#                  "Début rupture sp98 (si temporaire)", "Type rupture sp98", 
-#                  "Début rupture sp95 (si temporaire)", "Type rupture sp95", 
-#                  "Début rupture e85 (si temporaire)", "Type rupture e85", 
-#                  "Début rupture GPLc (si temporaire)", "Type rupture GPLc", 
-#                  "Début rupture gazole (si temporaire)", "Type rupture gazole", 
-#                  "Carburants disponibles", "Carburants indisponibles", 
-#                  "Carburants en rupture temporaire", "Carburants en rupture definitive", 
-#                  "Automate 24-24 (oui/non)", "Services proposés", 
-#                  "Département", "code_departement", "Région", "code_region", 
-#                  "horaires détaillés"), 
-#          new = c("id", "latitude", "longitude", "postal_code", "population", 
-#                  "address", "city", "services", "price", "out_of_stock", 
-#                  "hours", "geometry", "diesel_price_updated_on", "diesel_price", 
-#                  "SP95_price_updated_on", "SP95_price", "E85_price_updated_on", 
-#                  "E85_price", "GPLc_price_updated_on", "GPLc_price", 
-#                  "E10_price_updated_on", "E10_price", "SP98_price_updated_on", 
-#                  "SP98_price", "E10_out_of_stock_start", "E10_out_of_stock_type", 
-#                  "SP98_out_of_stock_start", "SP98_out_of_stock_type", 
-#                  "SP95_out_of_stock_start", "SP95_out_of_stock_type", 
-#                  "E85_out_of_stock_start", "E85_out_of_stock_type", 
-#                  "GPLc_out_of_stock_start", "GPLc_out_of_stock_type", 
-#                  "diesel_out_of_stock_start", "diesel_out_of_stock_type", 
-#                  "available_fuels", "unavailable_fuels", 
-#                  "temporarily_out_of_stock_fuels", "permanently_out_of_stock_fuels", 
-#                  "self_service_24_7", "offered_services", "department", 
-#                  "department_code", "region", "region_code", "detailed_hours"))
-# 
-# 
-# # check the structure of the data
-# str(df_FRA)
-# 
-# 
-# # clear environment 
-# rm(list = ls())
-```
-
-
-
-## Prix des carburants en France XML
-
-
-
-In this Diff-in-Diff Appraoch, France fuel stations are used as a control group. The Data are gathered from (LINK). The data are stored in an `.xml` file. In what follows, this file will be read and transformed into a format, so it can be handled in R. To load and transform the data, the `xml2` and `XML` packages are loaded. 
-
+In this Diff-in-Diff Appraoch, France fuel stations are used as a control group. The Data are gathered from (LINK). The data are stored in an `.xml` file. In what follows, this file will be read and transformed into a format, so it can be handled in R. To load and transform the data, the `xml2` and `XML` packages are loaded.
 
 ```{r}
 #| label: load_xml
 #| echo: true
 #| output: true
 
-
 t0 <- Sys.time()  # Record the start time to measure how long the operation takes.
 
 # read the data using XML, parse it and convert it to a list
-xml_data_list <- "../Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml" %>%
+xml_data_list <- "../../Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml" %>%
   XML::xmlParse() %>%
   XML::xmlToList()
 
@@ -918,10 +790,6 @@ t1 <- Sys.time()  # Record the end time to measure how long the operation took.
 print(t1 - t0)    # Calculate and print the elapsed time for the operation.
 
 ```
-
-
-
-
 
 ```{r}
 #| label: load_xml2
@@ -967,10 +835,6 @@ print(t1 - t0)    # Calculate and print the elapsed time for the operation.
 # ##############################################################################################################
 
 ```
-
-
-
-
 
 ```{r}
 #| label: load_xml3
@@ -1024,16 +888,6 @@ print(t1 - t0)
 #####################################################################
 ```
 
-
-
-
-
-
-
-
-
-
-
 ```{r}
 #| label: load_xml4
 #| echo: false
@@ -1058,11 +912,10 @@ all_prices_new <- all_prices_new %>%
 # save the data to avoid reloading this long process
 getwd()
 fwrite(all_prices_new,
-       file = "../Data/Prix-des-carburants/2022/FRA_prices_save.csv.gz",
+       file = "../../Data/Prix-des-carburants/2022/FRA_prices_save.csv.gz",
        row.names = FALSE)
 
 ```
-
 
 ```{r}
 #| label: read_new
@@ -1070,12 +923,9 @@ fwrite(all_prices_new,
 #| output: true
 
 # read the saved data
-all_prices_new <- fread("../Data/Prix-des-carburants/2022/FRA_prices_save.csv.gz")
+all_prices_new <- fread("../../Data/Prix-des-carburants/2022/FRA_prices_save.csv.gz")
 
 ```
-
-
-
 
 ```{r}
 #| label: impute_missing_days
@@ -1106,8 +956,6 @@ all_prices_new <- all_prices_new %>%
   filter(price_date != as.Date("2021-12-31"))
 
 ```
-
-
 
 ```{r}
 #| label: impute_missing_days3
@@ -1304,8 +1152,7 @@ ggplot(avg_gazole_prices, aes(x = date, y = avg_gazole_price)) +
 # save the data to avoid reloading this long process
 getwd()
 fwrite(wide_prices,
-       file = "../Data/Prix-des-carburants/2022/preprocessed_data_FRA.csv.gz",
+       file = "../../Data/Prix-des-carburants/2022/preprocessed_data_FRA.csv.gz",
        row.names = FALSE)
 
 ```
-
