@@ -1,0 +1,1311 @@
+---
+title: "Data Preprocessing"
+author: "Jannes Ehrhardt"
+date: today
+bibliography: "bib/quarto_documentation.bib"
+format:
+  html: 
+    theme: journal
+    toc: true
+    toc-depth: 4
+    toc-title: "Data Preprocessings"
+    fig-align: left
+    code-link: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+execute: 
+  echo: true
+---
+
+## Overview
+
+This script documents the loading, preprocessing and data exploration.
+
+## Loading Libraries
+
+When rerunning the code, please make sure that all packages that will be loaded here are installed on your machine.
+
+```{r}
+#| label: load_packages
+#| echo: true
+#| output: false
+
+# load libraries
+library(ggplot2)
+library(ggthemes)
+library(jsonlite)
+library(tidyverse)
+library(data.table)
+library(purrr)
+library(xml2)
+library(XML)
+library(microbenchmark)
+library(lubridate)
+library(visdat)
+library(zoo)
+```
+
+## Directories
+
+This project will be pushed to a remote repository on gitlab. Therefore, the the working directory is set in a relative way to minimize steps while rerunning the code.
+
+Since this rendering quarto files requires an interactive RStudio environment, the normal `getActiveDocumentContext()` function will not allow any rendering. This is solved by requiring the `rstudioapi` package.
+
+```{r}
+#| label: setwd
+#| echo: true
+#| output: false
+# set working directory to script location
+if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
+  setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+}
+# check if wd is the root directory
+getwd() 
+```
+
+## Tankerkönig
+
+The remote repository from Tankerkönig ([tankerkoenig](https://dev.azure.com/tankerkoenig/tankerkoenig-data){.uri}) can be cloned using `git clone`. However, The hole repository takes up over 100GB storage and thus is too large for my machine. The repository contains daily price data for gas stations in Germany since June 2014. The fuel tax discount came into effect at 1. of June 2022 and ended 31. of August 2022 (3 month period). To test for parallel trends with neighboring country France, I decided to manually download the data for the entire year of 2022. The data structure is as follows: For every day, there are two corresponding files: `prices.csv` and `stations.csv`, which are stored in sub directories of the `data` folder. The `prices.csv` file contains the prices and price changes for every gas station in Germany. The `stations.csv` file contains the metadata for every corresponding gas station in Germany. I have experimented with iteratively reading and binding the price data. However, the high observation count always results in memory overload (one single day contains between 200,000 to 300,000 observations). For adapting the approach of @Frondel2024, only daily averages will be needed. Therefore, I first calculate the daily averages and then merge the data, to make computations possible. The first step is to find a way to calculate daily price averages per station for one day, before implementing an iterative approach to do it for all days in the period of interest. First, there will be a small working example.
+
+### Small Working Example
+
+#### Loading Data
+
+```{r}
+#| label: read_day_1
+#| echo: true
+#| output: false
+
+# move up to project root and read data from data subfolder
+df <- fread("../Data/Tankerkoenig/prices/2022/01/2022-01-01-prices.csv")
+```
+
+#### Data Preprocessing
+
+Now, let's explore the data. First, the date variable is not correctly read by default and needs to be corrected to German time zone:
+
+```{r}
+#| label: correct_date
+#| echo: true
+#| output: false
+
+# Convert the 'date' column to POSIXct and handle time zone
+df$date <- as.POSIXct(df$date,
+                      format = "%Y-%m-%d %H:%M:%S%z",
+                      tz = "Europe/Berlin")
+```
+
+Some data exploration:
+
+```{r}
+#| label: active_stations
+#| echo: true
+#| output: true
+
+# How many stations were active on that day?
+unique(df$station_uuid) %>% length()
+
+# Show variable types
+str(df)
+
+# show if there are any missing values
+colSums(is.na(df))
+
+# summary statistics
+summary(df)
+```
+
+#### Data Cleaning
+
+What about those observations where the price is negative? The Value should represent an actual price, not a price change. How can this be explained?
+
+```{r}
+#| label: investigate_data
+#| echo: true
+#| output: true
+
+# create histogram of distribution of diesel prices
+ggplot(df, aes(x = diesel)) +
+  geom_histogram(bins = 50, fill = "blue", color = "black") +
+  labs(title = "Distribution of Diesel Prices",
+       x = "Price in Euro",
+       y = "Frequency") +
+  theme_few()
+
+# create histogram of distribution of e10 prices
+ggplot(df, aes(x = e10)) +
+  geom_histogram(bins = 50, fill = "blue", color = "black") +
+  labs(title = "Distribution of E10 Prices",
+       x = "Price in Euro",
+       y = "Frequency") +
+  theme_few()
+```
+
+```{r}
+#| label: investigate_weird_prices
+#| echo: true
+#| output: true
+
+# subset the weird observations
+weird_obs <- df %>% filter(diesel == -0.001 |
+                             e10 == -0.001)
+
+head(weird_obs, 3)
+```
+
+Check if there is a pattern to the stations with such observations:
+
+```{r}
+#| label: check_pattern
+#| echo: true
+#| output: true
+
+# give station ids
+unique(weird_obs$station_uuid)
+
+# load station data for the corresponding day to learn more
+df_stations <- fread("../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv")
+
+# subset the stations with the weird observations
+weird_stations <- df_stations %>%
+  filter(uuid %in% unique(weird_obs$station_uuid))
+
+head(weird_stations, 3)
+```
+
+The variable `openingtimes_json` contains information on the opening times and will be handled later on. Another issues arises in the raw data. There seems to be no information on how these weird negative prices can be explained. Therefore, I will contact the data provider to get more information on this issue.
+
+First, I also want to check if these weird observations correspond to the same stations at a different point in time. Therefore, I will check the (randomly chosen) date. 2022-07-12:
+
+```{r}
+#| label: check_pattern2
+#| echo: true
+#| output: true
+
+# price data for 2022-07-12
+df_2022_test <- fread("../Data/Tankerkoenig/prices/2022/07/2022-07-12-prices.csv")
+
+# load station data for the corresponding day to learn more
+df_stations2022_test <- fread("../Data/Tankerkoenig/stations/2022/07/2022-07-12-stations.csv")
+
+# correct time zone
+df_2022_test$date <- as.POSIXct(df_2022_test$date,
+                      format = "%Y-%m-%d %H:%M:%S%z",
+                      tz = "Europe/Berlin")
+
+# subset the weird observations
+weird_obs_test <- df_2022_test %>% filter(diesel == -0.001 |
+                             e10 == -0.001)
+
+# give station ids
+unique(weird_obs_test$station_uuid)
+
+# subset the stations with the weird observations
+weird_stations_test <- df_stations2022_test %>%
+  filter(uuid %in% unique(weird_obs_test$station_uuid))
+
+
+# display weird observations of 2021-01-01 and 2023-07-12
+
+# 2021-01-01
+head(weird_stations$name)
+
+# 2023-07-12
+head(weird_stations_test$name)
+```
+
+The weird observations do not correspond to the same stations at different points in time.
+
+```{r}
+#| label: clear_environment
+#| echo: true
+#| output: true
+
+# clear the environment except raw data df
+rm(list = setdiff(ls(), "df"))
+```
+
+The analysis will only include diesel prices and E10 prices, hence, E5 prices should be omitted early on to save memory.
+
+```{r}
+#| label: ommit_e5
+#| echo: true
+#| output: true
+
+# remove the e5 variable using the data.table package
+df <- df[, !"e5"]
+```
+
+#### Daily Averages per Station
+
+```{r}
+#| label: daily_avg
+#| echo: true
+#| output: true
+
+# Extract date only
+unique_date <- as.Date(df$date[1],
+                       tz = "Europe/Berlin")
+
+# Group by station_uuid to calculate daily averages, and add the extracted unique date as a column
+daily_averages <- df[, .(
+  avg_diesel = mean(diesel),
+  avg_e10 = mean(e10)
+), by = station_uuid][, date_only := unique_date]
+
+# View the result
+head(daily_averages,
+     3)
+
+# count the number of observations of daily_averages
+nrow(daily_averages)
+
+# should be the same as the number of unique station_uuids
+unique(df$station_uuid) %>% length()
+```
+
+#### Save Data
+
+```{r}
+#| label: save_data
+#| echo: true
+#| output: false
+
+
+getwd()
+# Specify the subfolder
+subfolder <- "../Data/Tankerkoenig/prices_avg"
+
+# save unique date as string to name the saved .csv like that
+
+unique_date_str <- as.character(unique_date)
+
+# Define the full file path including filename
+file_path <- file.path(subfolder, paste0(unique_date_str, "-avg-price-station.csv.gz"))
+
+# Save the DataFrame to CSV
+# write.csv(daily_averages,
+#           file = file_path,
+#           row.names = FALSE, 
+#           fileEncoding = "UTF-8")
+
+
+# now do the same using the fwrite function, since this is more efficient
+fwrite(daily_averages,
+       file = file_path,
+       row.names = FALSE)
+
+```
+
+To be sure, I test if the saved data can be loaded again and the variables are recocgnized correctly:
+
+```{r}
+#| label: test1
+#| echo: true
+#| output: true
+
+test <- fread(paste0("../Data/Tankerkoenig/prices_avg/", unique_date_str, "-avg-price-station.csv.gz"))
+
+str(test)
+
+head(test, 3)
+
+
+summary(test)
+```
+
+### Big Working Example
+
+#### Price Data
+
+```{r}
+#| label: Price_Big
+#| echo: true
+#| output: true
+
+# Define start and end dates
+start_date <- as.Date("2022-01-01")
+end_date <- as.Date("2022-12-31")
+
+# Define folder paths
+data_dir <- "../Data/Tankerkoenig/prices"
+output_dir <- "../Data/Tankerkoenig/prices_avg"
+
+# Create output directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+# Loop through each date in the range
+current_date <- start_date
+while (current_date <= end_date) {
+  
+  # Generate file path based on the date structure
+  year <- format(current_date, "%Y")
+  month <- format(current_date, "%m")
+  day <- format(current_date, "%Y-%m-%d")
+  file_path <- file.path(data_dir, year, month, paste0(day, "-prices.csv"))
+  
+  # Check if the file exists
+  if (file.exists(file_path)) {
+    
+    # Load data for the day
+    df <- fread(file_path)
+    
+    # Correct the date variable to German time zone
+    df$date <- as.POSIXct(df$date, format = "%Y-%m-%d %H:%M:%S%z",
+                          tz = "Europe/Berlin")
+    
+    # Filter out unusual negative values in price columns
+    df <- df %>% filter(diesel >= 0, e10 >= 0, e5 >= 0)
+    
+    # omit e5
+    df <- df[, !"e5"]
+    
+    # Calculate daily averages per station
+    unique_date <- as.Date(df$date[1], tz = "Europe/Berlin")
+    daily_averages <- df[, .(
+      avg_diesel = mean(diesel, na.rm = TRUE),
+      avg_e10 = mean(e10, na.rm = TRUE)
+    ), by = station_uuid][, date_only := unique_date]
+    
+    # Define file name for saving
+    output_file <- file.path(output_dir, paste0(unique_date,
+                                                "-avg-price-station.csv.gz"))
+    
+    # Save daily averages to CSV
+    fwrite(daily_averages, output_file, row.names = FALSE)
+    
+  } else {
+    message("File not found for date: ",
+            current_date)
+  }
+  
+  # Move to the next day
+  current_date <- current_date + 1
+}
+
+```
+
+
+
+```{r}
+#| label: bind_avg_prices
+#| echo: true
+#| output: true
+
+# Schritt 1: Liste der Dateinamen
+path <- "../Data/Tankerkoenig/prices_avg"  # Pfad zum Ordner
+files <- list.files(path, pattern = "\\.csv\\.gz$", full.names = TRUE)
+
+# Schritt 2: Dateien einlesen und Schritt 3: Zusammenführen
+combined_data <- rbindlist(lapply(files, fread))
+
+# order nach id
+combined_data <- combined_data[order(station_uuid, date_only)]
+
+# Schritt 4: Speichern
+fwrite(combined_data,
+       "../Data/Tankerkoenig/prices_avg/Combined/daily_avg_prices_GER.csv.gz",
+       row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+
+#### Stations Data
+
+```{r}
+#| label: empty_environment
+#| echo: true
+#| output: true
+
+rm(list = ls())
+
+```
+
+I start by merging the separate station data files, since I have not yet received information on the weird observations in the prices data and might want to change the approach to the data preprocessing.
+
+```{r}
+#| label: stations_data
+#| echo: true
+#| output: true
+
+# load the station data for day 1
+df_stations_day1 <- fread("../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv")
+
+# write a for loop that iterates over all days in the year 2022, taking the folder structure into account
+
+
+
+# # create a list of all days in 2022
+# days <- seq(as.Date("2022-01-01"), as.Date("2022-12-31"), by = "days")
+# 
+# # create a list of all days in 2022 in the format of the folder structure
+# days_str <- format(days, "%Y/%m/%Y-%m-%d")
+# 
+# # create an empty data.table to store the station data
+# df_stations <- data.table()
+# 
+# # iterate over all days in 2022
+# for (day in days_str) {
+#   # load the station data for the day
+#   df_stations_day <- fread(paste0("../Data/Tankerkoenig/stations/", day, "-stations.csv"))
+#   
+#   # add the date as a column
+#   df_stations_day[, date := as.Date(day, format = "%Y/%m/%Y-%m-%d")]
+#   
+#   # bind the data to the df_stations data.table
+#   df_stations <- rbind(df_stations, df_stations_day)
+# }
+
+
+
+# That worked fine, but took way too long. There is a more efficient way.
+
+# More efficient way:
+
+# Create a list of file paths for all days in 2022
+days <- seq(as.Date("2022-01-01"), as.Date("2022-12-31"), by = "days")
+file_paths <- sprintf("../Data/Tankerkoenig/stations/%s-stations.csv", format(days, "%Y/%m/%Y-%m-%d"))
+
+
+# Use lapply to read all files into a list of data.tables
+data_list <- lapply(seq_along(file_paths), function(i) {
+  dt <- fread(file_paths[i])
+  dt[, date := days[i]]  # Add date column
+  return(dt)
+})
+
+# Combine all data.tables into one
+df_stations <- rbindlist(data_list)
+
+names(df_stations)
+```
+
+There are many valuable information in this data.table. Some of the information will be disregarded in the following step, since the scale of this project does not allow for a detailed analysis of all variables. However, this should be kept in mind for future research. For understanding the complex nature of local competition in a more sophisticated way for example, the opening hours of a station could be a valuable variable to assess heterogeneous pricing patterns at different points of the day. The intuition would be that stations that have longer opening hours have higher market power at certain points of time (e.g. at night) and can thus charge higher prices. However, this is not the focus of this project and would not be in the scope of the course *Applied Economics*.
+
+The following variables will be omitted:
+
+-   `street`
+
+-   `house_number`
+
+-   `first_active`
+
+-   `openingtimes_json`
+
+
+```{r}
+#| label: omit_station_vars
+#| echo: true
+#| output: true
+
+# omit the variables above
+df_stations <- df_stations[, -c("street", "house_number", "first_active", "openingtimes_json")]
+
+# check the structure of the data
+str(df_stations)
+```
+
+
+
+
+
+
+Now let's better understand the data and it's structure. First, I would like to know how many stations are there on the first day of the year, then I would like to know how many stations were there on the last day of the year. 
+
+
+
+```{r}
+#| label: station_counts_day1
+#| echo: true
+#| output: true
+
+# Find the station count on day one using the date variable and the uuid:
+unique(df_stations[date == as.Date("2022-01-01"), .N, by = uuid])
+
+
+
+# Count of unique stations on the first day of the year
+stations_day1 <- df_stations[date == as.Date("2022-01-01"), .N, by = uuid][, .N]
+
+# Count of unique stations on the last day of the year
+stations_day_last <- df_stations[date == as.Date("2022-12-31"), .N, by = uuid][, .N]
+
+# Print results
+cat("Number of stations on the first day of the year:", stations_day1, "\n")
+cat("Number of stations on the last day of the year:", stations_day_last, "\n")
+
+# Calculate total difference:
+cat("Total difference in stations: +", stations_day_last - stations_day1, "\n")
+```
+
+
+
+
+After this, I would even like to know more about the fluctuations in the number of stations over the year, to test the argument that stations (and also competition) is relevantly constant over time. This can only be the case, if there are not many fluctuations. Therefore, I calculate the number of stations for every day in the year 2022 and plot the results using ggplot2.
+
+
+```{r}
+#| label: station_counts_over_year
+#| echo: true
+#| output: true
+
+# Calculate the number of unique stations per day
+stations_over_year <- df_stations[
+  date >= as.Date("2022-01-01") & date <= as.Date("2022-12-31"), 
+  .(num_stations = uniqueN(uuid)), 
+  by = date
+]
+
+# Plot the results
+ggplot(stations_over_year, aes(x = date, y = num_stations)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "Number of Stations Over the Year 2022",
+    x = "Date",
+    y = "Number of Stations"
+  ) +
+  theme_few() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+# let's add dashed lines at the beginning of the year and the end of the year and scale the plot a bit differently
+
+# Add dashed lines and adjust the y-axis scale
+ggplot(stations_over_year, aes(x = date, y = num_stations)) +
+  geom_line(color = "blue") +
+  geom_vline(xintercept = as.Date("2022-01-01"),
+             linetype = "dashed",
+             color = "black") +
+  geom_vline(xintercept = as.Date("2022-12-31"),
+             linetype = "dashed",
+             color = "black") +
+  scale_y_continuous(
+    limits = range(stations_over_year$num_stations) * c(0.9, 1.1),
+    expand = expansion(mult = c(0, 0))
+  ) +
+  labs(
+    title = "Number of Stations Over the Year 2022 (Germany)",
+    x = "Date",
+    y = "Number of Stations"
+  ) +
+  theme_few() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+```
+
+
+How many brands are there in the data set? How are their numbers distributed?
+
+
+```{r}
+#| label: brand_count
+#| echo: true
+#| output: true
+
+# Count the number of unique brands in the data
+unique(df_stations$brand) %>% length()
+
+# Distribution of the brands:
+df_stations[, .N, by = brand][order(-N)]
+
+# Identify the top 10 brands based on the total observations and save them in a variable
+top_brands <- df_stations[, .N, by = brand][order(-N)][1:10, brand]
+
+# Calculate the number of unique stations (UUIDs) for each top brand
+top_brands_stations <- df_stations[
+  brand %in% top_brands, 
+  .(unique_stations = uniqueN(uuid)), 
+  by = brand
+][order(-unique_stations)]
+
+# Print the results
+print(top_brands_stations)
+
+```
+
+Here it can be seen that the third most common brand is simply shown an empty string in the variable `brand`, implying that there are 1193 stations that are not owned by a brand. In what follows, I assign these stations the brand name "No Brand". Furthermore, I repeat the steps from above searching for the top 11 brands, to identify the actual top 10 brands (No Brand excluded). 
+
+
+```{r}
+#| label: brand_count2
+#| echo: true
+#| output: true
+
+# Assign the stations in with an empty brand name the brand name "No Brand"
+# currently there is simply an empty string in the variable brand
+df_stations[brand == "", brand := "No Brand"]
+
+# Count the number of unique brands in the data
+unique(df_stations$brand) %>% length()
+
+# Identify the top 11 brands based on the total observations and save them in a variable
+top_brands <- df_stations[, .N, by = brand][order(-N)][1:11, brand]
+
+# Calculate the number of unique stations (UUIDs) for each top brand
+top_brands_stations <- df_stations[
+  brand %in% top_brands, 
+  .(unique_stations = uniqueN(uuid)), 
+  by = brand
+][order(-unique_stations)]
+
+# Print the results
+print(top_brands_stations)
+
+
+```
+
+
+
+Now, how do the fluctuations of station counts look across the top brand? Are there any brands that actively whiden their market share in terms of stations?
+
+
+
+```{r}
+#| label: fluctuations_topbrands
+#| echo: true
+#| output: true
+
+# Calculate daily unique station counts for top 10 brands
+brand_station_trends <- df_stations[
+  brand %in% top_brands, 
+  .(num_stations = uniqueN(uuid)), 
+  by = .(brand, date)
+]
+
+
+ggplot(brand_station_trends, aes(x = date, y = num_stations, color = brand)) +
+  geom_line() +
+  labs(
+    title = "Trends in Unique Stations for Top 10 Brands (2022)",
+    x = "Date",
+    y = "Dayly Station Count"
+  ) +
+  theme_few() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_blank()
+  )
+
+
+```
+
+
+
+What's up with this peak of stations for the brand "No Brand" in the middle of the year? Let's find out:
+
+```{r}
+#| label: peak_no_brand
+#| echo: true
+#| output: true
+
+
+# Find the date of the peak for the brand "No Brand"
+df_stations[brand == "No Brand", .(num_stations = uniqueN(uuid)), by = date][order(-num_stations)][1]
+
+# subset the count data for all stations of the brand "No Brand" over the year
+no_brand_stations <- df_stations[brand == "No Brand", .(num_stations = uniqueN(uuid)), by = date]
+
+# The count of stations is relatively stable, exept for the dates 2022-05-25 and 2022-05-26. Why is this?
+
+# create a data.table with all observations of df_stations for the dates 2022-05-25 and 2022-05-26
+df_05_25_05_26 <- df_stations[date %in% as.Date(c("2022-05-25", "2022-05-26"))]
+
+
+# Are the number of observation in total higher on these two days then the days around them?
+
+# The two weird candidates
+df_05_25 <- df_stations[date %in% as.Date("2022-05-25")]
+df_05_26 <- df_stations[date %in% as.Date("2022-05-26")]
+
+# The day before and after
+df_05_24 <- df_stations[date %in% as.Date("2022-05-24")]
+df_05_27 <- df_stations[date %in% as.Date("2022-05-27")]
+
+# Count the number of observations for each day
+nrow(df_05_24)
+nrow(df_05_25)
+nrow(df_05_26)
+nrow(df_05_27)
+
+
+# How can this be
+
+# Compare 2022-05-26 with 2022-05-27
+df_05_26_27 <- df_stations[date %in% as.Date(c("2022-05-26", "2022-05-27"))]
+
+# count the number of "no brand" stations for each day
+df_05_26_27[brand == "No Brand", .N, by = date]
+
+# If the Number of observations for both days are the same and one day prior there where more stations that are assigned to "no brand", then it means that some stations are actually of a brand and it is not recorded in the data. This can be traced back later on using the uuid. But first, I need to identify the stations that are assigned to "no brand" on 2022-05-26 disappear from that brand assignment on the next day:
+
+# Extract the UUIDs of "No Brand" stations for both days
+no_brand_26 <- df_stations[date == as.Date("2022-05-26") & brand == "No Brand", unique(uuid)]
+no_brand_27 <- df_stations[date == as.Date("2022-05-27") & brand == "No Brand", unique(uuid)]
+
+# Find stations in "No Brand" on 2022-05-26 but not on 2022-05-27
+disappeared_stations <- setdiff(no_brand_26, no_brand_27)
+
+# disappeared_stations has a lengh of 456 (1131 - 675)
+
+# Extract data for these stations for both days to investigate further
+disappeared_data <- df_stations[
+  uuid %in% disappeared_stations & date %in% as.Date(c("2022-05-26", "2022-05-27"))
+]
+
+
+# Check brand assignment for these stations on 2022-05-27
+Stations_that_changed <- df_stations[uuid %in% disappeared_stations & date == as.Date("2022-05-27"), .(uuid, brand, city)]
+
+# give counts of the brands in Stations_that_changed
+Stations_that_changed[, .N, by = brand]
+
+# show cities that were affected of the probable data error
+unique(Stations_that_changed$city)
+
+# There seems to be no pattern, at least not directly
+```
+
+
+A short assessment does not show any pattern to why there are some stations that are assigned to "No Brand" on 2022-05-26 and are assigned to a brand on 2022-05-27. It is likely an error in the raw data. Further research could asses this in more detail, plotting a map of the stations that are affected, maybe revealing any spatial patterns. This is however not important for the further assessment of my research question and can therefore be disregarded.
+
+```{r}
+#| label: clear_environment3
+#| echo: true
+#| output: true
+
+# clear the environment except raw data df
+rm(list = setdiff(ls(), "df_stations"))
+```
+
+
+Save the stations data to later merge it with price data
+
+```{r}
+#| label: stations_data_save
+#| echo: true
+#| output: true
+
+# save the data
+fwrite(df_stations, "../Data/Tankerkoenig/stations/2022/preprocessed/stations_2022.csv.gz",
+       row.names = FALSE)
+```
+
+
+## Prix des carburants en France
+
+### Small Working Example
+
+#### Loading Data
+
+```{r}
+#| label: Prix_Load
+#| echo: true
+#| output: false
+
+# getwd()
+# # load the data
+# df_FRA <- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.csv")
+# 
+# df_FRA2 <- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v3.csv")
+# 
+# # library(jsonlite)
+# json_data <- fromJSON("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.json", flatten = TRUE)
+# 
+# str(json_data)
+# 
+# dt <- as.data.table(json_data)
+# 
+# str(dt)
+```
+
+#### Cleaning Data
+
+```{r}
+#| label: Clean_FRA
+#| echo: true
+#| output: true
+
+# give a list of the variable names
+# names(df_FRA)
+# 
+# # Aim: Clean rename the colums to English 
+# 
+# # Convert the data frame to a data.table for efficiency
+# setDT(df_FRA)
+# 
+# # Rename columns
+# setnames(df_FRA, 
+#          old = c("id", "latitude", "longitude", "Code postal", "pop", "Adresse", 
+#                  "Ville", "services", "prix", "rupture", "horaires", "geom", 
+#                  "Prix Gazole mis à jour le", "Prix Gazole", 
+#                  "Prix SP95 mis à jour le", "Prix SP95", 
+#                  "Prix E85 mis à jour le", "Prix E85", 
+#                  "Prix GPLc mis à jour le", "Prix GPLc", 
+#                  "Prix E10 mis à jour le", "Prix E10", 
+#                  "Prix SP98 mis à jour le", "Prix SP98", 
+#                  "Début rupture e10 (si temporaire)", "Type rupture e10", 
+#                  "Début rupture sp98 (si temporaire)", "Type rupture sp98", 
+#                  "Début rupture sp95 (si temporaire)", "Type rupture sp95", 
+#                  "Début rupture e85 (si temporaire)", "Type rupture e85", 
+#                  "Début rupture GPLc (si temporaire)", "Type rupture GPLc", 
+#                  "Début rupture gazole (si temporaire)", "Type rupture gazole", 
+#                  "Carburants disponibles", "Carburants indisponibles", 
+#                  "Carburants en rupture temporaire", "Carburants en rupture definitive", 
+#                  "Automate 24-24 (oui/non)", "Services proposés", 
+#                  "Département", "code_departement", "Région", "code_region", 
+#                  "horaires détaillés"), 
+#          new = c("id", "latitude", "longitude", "postal_code", "population", 
+#                  "address", "city", "services", "price", "out_of_stock", 
+#                  "hours", "geometry", "diesel_price_updated_on", "diesel_price", 
+#                  "SP95_price_updated_on", "SP95_price", "E85_price_updated_on", 
+#                  "E85_price", "GPLc_price_updated_on", "GPLc_price", 
+#                  "E10_price_updated_on", "E10_price", "SP98_price_updated_on", 
+#                  "SP98_price", "E10_out_of_stock_start", "E10_out_of_stock_type", 
+#                  "SP98_out_of_stock_start", "SP98_out_of_stock_type", 
+#                  "SP95_out_of_stock_start", "SP95_out_of_stock_type", 
+#                  "E85_out_of_stock_start", "E85_out_of_stock_type", 
+#                  "GPLc_out_of_stock_start", "GPLc_out_of_stock_type", 
+#                  "diesel_out_of_stock_start", "diesel_out_of_stock_type", 
+#                  "available_fuels", "unavailable_fuels", 
+#                  "temporarily_out_of_stock_fuels", "permanently_out_of_stock_fuels", 
+#                  "self_service_24_7", "offered_services", "department", 
+#                  "department_code", "region", "region_code", "detailed_hours"))
+# 
+# 
+# # check the structure of the data
+# str(df_FRA)
+# 
+# 
+# # clear environment 
+# rm(list = ls())
+```
+
+
+
+## Prix des carburants en France XML
+
+
+
+In this Diff-in-Diff Appraoch, France fuel stations are used as a control group. The Data are gathered from (LINK). The data are stored in an `.xml` file. In what follows, this file will be read and transformed into a format, so it can be handled in R. To load and transform the data, the `xml2` and `XML` packages are loaded. 
+
+
+```{r}
+#| label: load_xml
+#| echo: true
+#| output: true
+
+
+t0 <- Sys.time()  # Record the start time to measure how long the operation takes.
+
+# read the data using XML, parse it and convert it to a list
+xml_data_list <- "../Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml" %>%
+  XML::xmlParse() %>%
+  XML::xmlToList()
+
+t1 <- Sys.time()  # Record the end time to measure how long the operation took.
+print(t1 - t0)    # Calculate and print the elapsed time for the operation.
+
+```
+
+
+
+
+
+```{r}
+#| label: load_xml2
+#| echo: false
+#| output: true
+
+# ########################## This is from Mr. Dannemann and does not extract station ids ##########################
+# 
+# locs <- lapply(xml_data_list, function(i) {  # Apply a function to each element of 'xml_data_list'.
+#   i[[".attrs"]] %>%                         # Access the '.attrs' element of the current list item 'i'.
+#     as.list() %>%                           # Convert the '.attrs' element into a list.
+#     as.data.frame()                         # Convert the list into a data frame.
+# }) %>%                                      # After processing each list element, proceed to the next step.
+#   dplyr::bind_rows()                        # Combine all the individual data frames into one using row binding.
+# 
+# 
+# 
+# 
+# 
+# 
+# t0 <- Sys.time()  # Record the start time to measure how long the operation takes.
+# 
+# prix <- lapply(xml_data_list, function(i) {  # Apply a function to each element of 'xml_data_list'.
+#   elements <- i[names(i) %in% "prix"]       # Extract elements from 'i' where the name is "prix".
+#   
+#   lapply(elements, function(e) {            # Apply a function to each extracted "prix" element.
+#     if (!is.null(e)) {                      # Check if the current element 'e' is not NULL.
+#       e %>%                                 # If not NULL, take 'e' and:
+#         t() %>%                             # Transpose it (swap rows and columns).
+#         as.data.frame()                     # Convert the transposed data into a data frame.
+#     } else {                                # If the element 'e' is NULL:
+#       NULL                                  # Return NULL.
+#     }
+#   }) |>                                     # After processing all "prix" elements, proceed to the next step.
+#     dplyr::bind_rows()                      # Combine all data frames from the inner lapply into one using row binding.
+# }) |>                                       # After processing all list elements, proceed to the next step.
+#   dplyr::bind_rows()                        # Combine all data frames from the outer lapply into one using row binding.
+# 
+# t1 <- Sys.time()  # Record the end time to measure how long the operation took.
+# print(t1 - t0)    # Calculate and print the elapsed time for the operation.
+# 
+# 
+# ##############################################################################################################
+
+```
+
+
+
+
+
+```{r}
+#| label: load_xml3
+#| echo: false
+#| output: true
+
+######################### This works #######################
+
+# Function to extract station attributes
+extract_station_attributes <- function(attrs) {
+  tibble(
+    station_id = attrs[["id"]],
+    longitude = as.numeric(attrs[["longitude"]]) / 100000,
+    latitude = as.numeric(attrs[["latitude"]]) / 100000
+  )
+}
+
+
+# Function to extract price information
+extract_prices <- function(pdv, station_attrs) {
+  prix_list <- pdv[names(pdv) == "prix"]
+  
+  # Extract price details and combine them into a dataframe
+  map_dfr(prix_list, function(prix) {
+    tibble(
+      fuel_type = prix[["nom"]],
+      fuel_id = prix[["id"]],
+      price_date = prix[["maj"]],
+      price_value = as.numeric(prix[["valeur"]]),
+      station_id = station_attrs$station_id, # Add station ID directly
+      longitude = station_attrs$longitude,  # Add longitude directly
+      latitude = station_attrs$latitude     # Add latitude directly
+    )
+  })
+}
+
+# Process all stations and compile the results
+t0 <- Sys.time()
+
+all_prices <- map_dfr(xml_data_list, function(pdv) {
+  # Extract station attributes once for each station
+  station_attrs <- extract_station_attributes(pdv[[".attrs"]])
+  
+  # Extract prices using the pre-extracted station attributes
+  extract_prices(pdv, station_attrs)
+})
+
+t1 <- Sys.time()
+print(t1 - t0)
+
+#####################################################################
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#| label: load_xml4
+#| echo: false
+#| output: true
+
+# show how many unique stations there are
+unique(all_prices$station_id) %>% length()
+
+# show the structure of the data
+str(all_prices)
+
+# convert price_date to a date format using the correct time format for France
+# (save as new dataframe in case of logical errors => xml data has not to be extracted again - over 8 hours.)
+all_prices_new <- all_prices %>%
+  mutate(price_date = ymd_hms(price_date,
+                              tz = "Europe/Paris")) 
+
+# keep only the date part
+all_prices_new <- all_prices_new %>%
+  mutate(price_date = as.Date(price_date))
+
+# save the data to avoid reloading this long process
+getwd()
+fwrite(all_prices_new,
+       file = "../Data/Prix-des-carburants/2022/FRA_prices_save.csv.gz",
+       row.names = FALSE)
+
+```
+
+
+```{r}
+#| label: read_new
+#| echo: false
+#| output: true
+
+# read the saved data
+all_prices_new <- fread("../Data/Prix-des-carburants/2022/FRA_prices_save.csv.gz")
+
+```
+
+
+
+
+```{r}
+#| label: impute_missing_days
+#| echo: false
+#| output: true
+
+# show the first and last date of the data
+min(all_prices_new$price_date)
+max(all_prices_new$price_date)
+
+# show how many obseravtions of the day 2021-12-31 there are
+count_2021_12_31 <- all_prices_new %>%
+    filter(price_date == as.Date("2021-12-31")) %>%
+    nrow()
+
+count_2021_12_31
+```
+
+So there are 4289 Observations in the data that are from 2021-12-31. These will not be needed in the analysis and can be omitted.
+
+```{r}
+#| label: impute_missing_days2
+#| echo: false
+#| output: true
+
+# omit the observations from 2021-12-31
+all_prices_new <- all_prices_new %>%
+  filter(price_date != as.Date("2021-12-31"))
+
+```
+
+
+
+```{r}
+#| label: impute_missing_days3
+#| echo: false
+#| output: true
+
+# 1. Filterung der relevanten Kraftstoffarten
+all_prices_new <- all_prices_new %>%
+  filter(fuel_type %in% c("Gazole", "E10"))
+
+
+# Before further processing, the data should be rearranged ordering for station_id, fuel_type and price_date. 
+all_prices_new <- all_prices_new %>%
+  arrange(station_id, fuel_type, price_date)
+
+str(all_prices_new)
+
+# show how many NAs there are for price_value
+sum(is.na(all_prices_new$price_value))
+
+# good 
+
+# When looking at the data, there are structures that might cause problems later and should be adressed now.
+
+# Things to be adressed:
+
+# Indicate stations that only have of of the two fuel types 'Gazole' or 'E10' like this:
+# new variable: Station_Type = "Gazole only" or "E10 only" or "Both"
+
+
+# Indicate stations that only have one of the two fuel types 'Gazole' or 'E10', or both
+all_prices_new <- all_prices_new %>%
+  group_by(station_id) %>%
+  summarize(
+    has_gazole = any(fuel_type == "Gazole"),
+    has_e10 = any(fuel_type == "E10")
+  ) %>%
+  mutate(
+    Station_Type = case_when(
+      has_gazole & has_e10 ~ "Both",
+      has_gazole ~ "Gazole only",
+      has_e10 ~ "E10 only",
+      TRUE ~ "None"
+    )
+  ) %>%
+  select(station_id, Station_Type) %>%
+  right_join(all_prices_new, by = "station_id")
+
+head(all_prices_new, 8)
+
+# Next Things to be adressed:
+
+# The observations in the data are recorded in dfferent intervalls. So sometimes, there are multiple observations for the same day for one station and sometimes there are only a few observations with days missing in between. I need to impute these missing days by the value of the day before. In a first step, I only want to create a new variable called 'date', that is simply every day in the year 2022 for every station in the data set. However, for Stations of the category 'Both', this needs to happen twice, since the data is still in the long format and for those stations, every fuel type has its own 365 observations inside the year. So the new variable will prolong the data set, since it has every day in the yeare for every station, while this is currently not the way the data is structured
+
+# This will be done now:
+
+
+# Create a sequence of dates for 2022
+all_dates <- seq(as.Date("2022-01-01"), as.Date("2022-12-31"), by = "day")
+
+
+
+# Expand the data
+expanded_data <- all_prices_new %>%
+  distinct(station_id, Station_Type, fuel_type) %>%
+  expand_grid(date = all_dates) %>%
+  filter((Station_Type == "Both" & fuel_type %in% c("Gazole", "E10")) |
+         (Station_Type == "Gazole only" & fuel_type == "Gazole") |
+         (Station_Type == "E10 only" & fuel_type == "E10"))
+
+str(expanded_data)
+str(all_prices_new)
+
+
+# Merge with the original data (converting IDate to Date)
+final_data <- expanded_data %>%
+  left_join(all_prices_new %>%
+              mutate(date = as.Date(price_date)), 
+            by = c("station_id", "fuel_type", "date"))
+
+
+# Veryfy that I did not loose any Information:
+
+# The Number of NAs in final_data should equal the difference of nr. of observations between final_data and all_prices_new:
+sum(is.na(final_data$price_value))
+nrow(final_data)
+nrow(all_prices_new)
+sum(is.na(final_data$price_value)) == nrow(final_data) - nrow(all_prices_new)
+
+
+
+
+head(final_data, 8)
+
+# Now the missing values have to be imputed. Every missing value for price_value can simply be replaced by the value of the day before (for each individual station inside each fueltype category). This is done in the next step.
+
+
+
+
+# Impute missing price values using the previous available price within each station and fuel_type
+final_data_imputed <- final_data %>%
+  group_by(station_id, fuel_type) %>%
+  arrange(station_id, fuel_type, date) %>%
+  mutate(price_value = zoo::na.locf(price_value, na.rm = FALSE)) %>%
+  ungroup()
+
+# Check if there are any remaining NAs
+sum(is.na(final_data_imputed$price_value))
+
+
+names(final_data_imputed)
+
+# omit unnecessary variables
+final_data_imputed <- final_data_imputed[, !names(final_data_imputed) %in% c("Station_Type.y", "Station_Type.x.x", "Station_Type.y.y", "Station_Type.x", "Station_Type.y.y.y", "fuel_id")]
+
+
+head(final_data_imputed, 8)
+
+
+# Imputieren der fehlenden Werte, indem der nächste verfügbare Wert verwendet wird
+final_data_imputed_next <- final_data_imputed %>%
+  group_by(station_id, fuel_type) %>%
+  arrange(station_id, fuel_type, date) %>%
+  mutate(price_value = zoo::na.locf(price_value, fromLast = TRUE, na.rm = FALSE)) %>%
+  ungroup()
+
+# Überprüfen, ob noch fehlende Werte vorhanden sind
+sum(is.na(final_data_imputed_next$price_value))
+
+
+
+head(final_data_imputed_next, 8)
+
+
+final_data_imputed_next <- final_data_imputed_next %>%
+  group_by(station_id) %>%
+  fill(longitude, latitude, .direction = "downup") %>%
+  ungroup()
+
+sum(is.na(final_data_imputed_next$longitude))
+sum(is.na(final_data_imputed_next$latitude))
+
+
+final_data_imputed_next <- final_data_imputed_next[, !names(final_data_imputed_next) %in% c("price_date")]
+
+str(final_data_imputed_next)
+
+
+
+
+# Umwandeln von final_data_imputed_next in eine data.table
+final_data_imputed_next_dt <- as.data.table(final_data_imputed_next)
+
+# Überprüfen der Struktur der neuen data.table
+str(final_data_imputed_next_dt)
+
+
+
+
+
+
+
+# Reshaping with aggregation
+wide_prices <- dcast(
+  final_data_imputed_next_dt,
+  station_id + date + longitude + latitude ~ fuel_type,
+  value.var = "price_value",
+  fun.aggregate = mean # Use mean to aggregate duplicate entries, automatically produces daily averages per station
+)
+
+
+
+# calculate the average fuel price for gazole for each day in france: So I have to calculate the mean of all station prices for each day:
+
+# Calculate the average fuel price for Gazole for each day in France using the wide_prices data.table
+avg_gazole_prices <- wide_prices[, .(avg_gazole_price = mean(Gazole)), by = date]
+
+
+# vizualize using ggplot2
+ggplot(avg_gazole_prices, aes(x = date, y = avg_gazole_price)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "Average Gazole Price in France (2022)",
+    x = "Date",
+    y = "Average Price (€/L)"
+  ) +
+  theme_few() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+
+
+# save the data to avoid reloading this long process
+getwd()
+fwrite(wide_prices,
+       file = "../Data/Prix-des-carburants/2022/preprocessed_data_FRA.csv.gz",
+       row.names = FALSE)
+
+```
+

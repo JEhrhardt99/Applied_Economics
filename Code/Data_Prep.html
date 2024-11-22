@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.551">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Jannes Ehrhardt">
+<meta name="dcterms.date" content="2024-11-15">
+<title>Data Preprocessing</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="Data_Prep_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Data_Prep_files/libs/quarto-html/quarto.js"></script>
+<script src="Data_Prep_files/libs/quarto-html/popper.min.js"></script>
+<script src="Data_Prep_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Data_Prep_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Data_Prep_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Data_Prep_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Data_Prep_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Data_Prep_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Data_Prep_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+</head>
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Data Preprocessings</h2>
+   
+  <ul>
+<li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#loading-libraries" id="toc-loading-libraries" class="nav-link" data-scroll-target="#loading-libraries">Loading Libraries</a></li>
+  <li><a href="#directories" id="toc-directories" class="nav-link" data-scroll-target="#directories">Directories</a></li>
+  <li>
+<a href="#tankerk%C3%B6nig" id="toc-tankerkönig" class="nav-link" data-scroll-target="#tankerk%C3%B6nig">Tankerkönig</a>
+  <ul>
+<li>
+<a href="#small-working-example" id="toc-small-working-example" class="nav-link" data-scroll-target="#small-working-example">Small Working Example</a>
+  <ul class="collapse">
+<li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data">Loading Data</a></li>
+  <li><a href="#data-preprocessing" id="toc-data-preprocessing" class="nav-link" data-scroll-target="#data-preprocessing">Data Preprocessing</a></li>
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning">Data Cleaning</a></li>
+  <li><a href="#daily-averages-per-station" id="toc-daily-averages-per-station" class="nav-link" data-scroll-target="#daily-averages-per-station">Daily Averages per Station</a></li>
+  <li><a href="#save-data" id="toc-save-data" class="nav-link" data-scroll-target="#save-data">Save Data</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#big-working-example" id="toc-big-working-example" class="nav-link" data-scroll-target="#big-working-example">Big Working Example</a>
+  <ul class="collapse">
+<li><a href="#stations-data" id="toc-stations-data" class="nav-link" data-scroll-target="#stations-data">Stations Data</a></li>
+  </ul>
+</li>
+  </ul>
+</li>
+  <li>
+<a href="#prix-des-carburants-en-france" id="toc-prix-des-carburants-en-france" class="nav-link" data-scroll-target="#prix-des-carburants-en-france">Prix des carburants en France</a>
+  <ul>
+<li>
+<a href="#small-working-example-1" id="toc-small-working-example-1" class="nav-link" data-scroll-target="#small-working-example-1">Small Working Example</a>
+  <ul class="collapse">
+<li><a href="#loading-data-1" id="toc-loading-data-1" class="nav-link" data-scroll-target="#loading-data-1">Loading Data</a></li>
+  <li><a href="#cleaning-data" id="toc-cleaning-data" class="nav-link" data-scroll-target="#cleaning-data">Cleaning Data</a></li>
+  </ul>
+</li>
+  </ul>
+</li>
+  <li><a href="#prix-des-carburants-en-france-xml" id="toc-prix-des-carburants-en-france-xml" class="nav-link" data-scroll-target="#prix-des-carburants-en-france-xml">Prix des carburants en France XML</a></li>
+  </ul></nav>
+</div>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">Data Preprocessing</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jannes Ehrhardt </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 15, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header><section id="overview" class="level2"><h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This script documents the loading, preprocessing and data exploration.</p>
+</section><section id="loading-libraries" class="level2"><h2 class="anchored" data-anchor-id="loading-libraries">Loading Libraries</h2>
+<p>When rerunning the code, please make sure that all packages that will be loaded here are installed on your machine.</p>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load libraries</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://jrnold.github.io/ggthemes/">ggthemes</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://jeroen.r-universe.dev/jsonlite">jsonlite</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com">data.table</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/">purrr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xml2.r-lib.org/">xml2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.omegahat.net/RSXML/">XML</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/">microbenchmark</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="directories" class="level2"><h2 class="anchored" data-anchor-id="directories">Directories</h2>
+<p>This project will be pushed to a remote repository on gitlab. Therefore, the the working directory is set in a relative way to minimize steps while rerunning the code.</p>
+<p>Since this rendering quarto files requires an interactive RStudio environment, the normal <code>getActiveDocumentContext()</code> function will not allow any rendering. This is solved by requiring the <code>rstudioapi</code> package.</p>
+<div class="cell">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># set working directory to script location</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"rstudioapi"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu">rstudioapi</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/rstudioapi/reference/isAvailable.html">isAvailable</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/getwd.html">setwd</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/basename.html">dirname</a></span><span class="op">(</span><span class="fu">rstudioapi</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/rstudioapi/reference/rstudio-editors.html">getActiveDocumentContext</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">path</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co"># check if wd is the root directory</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="tankerkönig" class="level2"><h2 class="anchored" data-anchor-id="tankerkönig">Tankerkönig</h2>
+<p>The remote repository from Tankerkönig (<a href="https://dev.azure.com/tankerkoenig/tankerkoenig-data" class="uri">tankerkoenig</a>) can be cloned using <code>git clone</code>. However, The hole repository takes up over 100GB storage and thus is too large for my machine. The repository contains daily price data for gas stations in Germany since June 2014. The fuel tax discount came into effect at 1. of June 2022 and ended 31. of August 2022 (3 month period). To test for parallel trends with neighboring country France, I decided to manually download the data for the entire year of 2022. The data structure is as follows: For every day, there are two corresponding files: <code>prices.csv</code> and <code>stations.csv</code>, which are stored in sub directories of the <code>data</code> folder. The <code>prices.csv</code> file contains the prices and price changes for every gas station in Germany. The <code>stations.csv</code> file contains the metadata for every corresponding gas station in Germany. I have experimented with iteratively reading and binding the price data. However, the high observation count always results in memory overload (one single day contains between 200,000 to 300,000 observations). For adapting the approach of <span class="citation" data-cites="Frondel2024">Frondel, Thiel, and Vance (<a href="#ref-Frondel2024" role="doc-biblioref">2024</a>)</span>, only daily averages will be needed. Therefore, I first calculate the daily averages and then merge the data, to make computations possible. The first step is to find a way to calculate daily price averages per station for one day, before implementing an iterative approach to do it for all days in the period of interest. First, there will be a small working example.</p>
+<section id="small-working-example" class="level3"><h3 class="anchored" data-anchor-id="small-working-example">Small Working Example</h3>
+<section id="loading-data" class="level4"><h4 class="anchored" data-anchor-id="loading-data">Loading Data</h4>
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># move up to project root and read data from data subfolder</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/prices/2022/01/2022-01-01-prices.csv"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="data-preprocessing" class="level4"><h4 class="anchored" data-anchor-id="data-preprocessing">Data Preprocessing</h4>
+<p>Now, let’s explore the data. First, the date variable is not correctly read by default and needs to be corrected to German time zone:</p>
+<div class="cell">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Convert the 'date' column to POSIXct and handle time zone</span></span>
+<span><span class="va">df</span><span class="op">$</span><span class="va">date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html">as.POSIXct</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">date</span>,</span>
+<span>                      format <span class="op">=</span> <span class="st">"%Y-%m-%d %H:%M:%S%z"</span>,</span>
+<span>                      tz <span class="op">=</span> <span class="st">"Europe/Berlin"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Some data exploration:</p>
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># How many stations were active on that day?</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">station_uuid</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 13913</code></pre>
+</div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Show variable types</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classes 'data.table' and 'data.frame':  295973 obs. of  8 variables:
+ $ date        : POSIXct, format: "2022-01-01 00:00:09" "2022-01-01 00:00:09" ...
+ $ station_uuid: chr  "5b9216c3-a1bb-4e15-929b-696b8d9fbbf4" "3e8b54ba-efd2-48ea-b948-7104f540d930" "450457dd-f5a1-4f87-a3b9-019c13bdbbca" "4a979b8a-98bb-4e67-b85b-744b5de70e80" ...
+ $ diesel      : num  1.56 1.56 1.52 1.55 1.56 ...
+ $ e5          : num  1.73 1.72 1.69 1.71 1.68 ...
+ $ e10         : num  1.67 1.66 1.63 1.65 1.64 ...
+ $ dieselchange: int  1 1 1 1 1 1 0 1 1 1 ...
+ $ e5change    : int  1 0 0 1 1 1 1 1 1 1 ...
+ $ e10change   : int  1 0 0 1 1 0 1 0 1 1 ...
+ - attr(*, ".internal.selfref")=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># show if there are any missing values</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        date station_uuid       diesel           e5          e10 dieselchange 
+           0            0            0            0            0            0 
+    e5change    e10change 
+           0            0 </code></pre>
+</div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># summary statistics</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      date                        station_uuid           diesel     
+ Min.   :2022-01-01 00:00:09.00   Length:295973      Min.   :0.000  
+ 1st Qu.:2022-01-01 10:24:08.00   Class :character   1st Qu.:1.549  
+ Median :2022-01-01 13:52:11.00   Mode  :character   Median :1.579  
+ Mean   :2022-01-01 13:55:58.71                      Mean   :1.582  
+ 3rd Qu.:2022-01-01 17:49:08.00                      3rd Qu.:1.619  
+ Max.   :2022-01-01 23:58:13.00                      Max.   :1.939  
+       e5             e10          dieselchange       e5change    
+ Min.   :0.000   Min.   :-0.001   Min.   :0.0000   Min.   :0.000  
+ 1st Qu.:1.689   1st Qu.: 1.629   1st Qu.:1.0000   1st Qu.:1.000  
+ Median :1.729   Median : 1.659   Median :1.0000   Median :1.000  
+ Mean   :1.708   Mean   : 1.603   Mean   :0.8098   Mean   :0.804  
+ 3rd Qu.:1.769   3rd Qu.: 1.709   3rd Qu.:1.0000   3rd Qu.:1.000  
+ Max.   :2.089   Max.   : 2.029   Max.   :3.0000   Max.   :3.000  
+   e10change     
+ Min.   :0.0000  
+ 1st Qu.:1.0000  
+ Median :1.0000  
+ Mean   :0.7809  
+ 3rd Qu.:1.0000  
+ Max.   :3.0000  </code></pre>
+</div>
+</div>
+</section><section id="data-cleaning" class="level4"><h4 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h4>
+<p>What about those observations where the price is negative? The Value should represent an actual price, not a price change. How can this be explained?</p>
+<div class="cell">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># create histogram of distribution of diesel prices</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">diesel</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">50</span>, fill <span class="op">=</span> <span class="st">"blue"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Distribution of Diesel Prices"</span>,</span>
+<span>       x <span class="op">=</span> <span class="st">"Price in Euro"</span>,</span>
+<span>       y <span class="op">=</span> <span class="st">"Frequency"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="http://jrnold.github.io/ggthemes/reference/theme_few.html">theme_few</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="Data_Prep_files/figure-html/investigate_data-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># create histogram of distribution of e10 prices</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">e10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">50</span>, fill <span class="op">=</span> <span class="st">"blue"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Distribution of E10 Prices"</span>,</span>
+<span>       x <span class="op">=</span> <span class="st">"Price in Euro"</span>,</span>
+<span>       y <span class="op">=</span> <span class="st">"Frequency"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="http://jrnold.github.io/ggthemes/reference/theme_few.html">theme_few</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="Data_Prep_files/figure-html/investigate_data-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># subset the weird observations</span></span>
+<span><span class="va">weird_obs</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">diesel</span> <span class="op">==</span> <span class="op">-</span><span class="fl">0.001</span> <span class="op">|</span></span>
+<span>                             <span class="va">e10</span> <span class="op">==</span> <span class="op">-</span><span class="fl">0.001</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">weird_obs</span>, <span class="fl">3</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  date                         station_uuid diesel    e5    e10
+                &lt;POSc&gt;                               &lt;char&gt;  &lt;num&gt; &lt;num&gt;  &lt;num&gt;
+1: 2022-01-01 05:55:16 62edbe52-684e-43fb-8096-39e943ae6fc7  1.479 1.689 -0.001
+2: 2022-01-01 06:20:10 62edbe52-684e-43fb-8096-39e943ae6fc7  1.479 1.679 -0.001
+3: 2022-01-01 06:55:09 62edbe52-684e-43fb-8096-39e943ae6fc7  1.589 1.739 -0.001
+   dieselchange e5change e10change
+          &lt;int&gt;    &lt;int&gt;     &lt;int&gt;
+1:            1        1         0
+2:            0        1         0
+3:            1        1         0</code></pre>
+</div>
+</div>
+<p>Check if there is a pattern to the stations with such observations:</p>
+<div class="cell">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># give station ids</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">weird_obs</span><span class="op">$</span><span class="va">station_uuid</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "62edbe52-684e-43fb-8096-39e943ae6fc7"</code></pre>
+</div>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load station data for the corresponding day to learn more</span></span>
+<span><span class="va">df_stations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># subset the stations with the weird observations</span></span>
+<span><span class="va">weird_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">weird_obs</span><span class="op">$</span><span class="va">station_uuid</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">weird_stations</span>, <span class="fl">3</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                   uuid           name  brand
+                                 &lt;char&gt;         &lt;char&gt; &lt;char&gt;
+1: 62edbe52-684e-43fb-8096-39e943ae6fc7 Beatrix Betzer      T
+                 street house_number post_code   city latitude longitude
+                 &lt;char&gt;       &lt;char&gt;    &lt;char&gt; &lt;char&gt;    &lt;num&gt;     &lt;num&gt;
+1: Ritter-Heinrich-Str.            2     56766  Ulmen 50.21377   6.97353
+          first_active
+                &lt;POSc&gt;
+1: 2014-03-18 15:45:31
+                                                                                                                                                                                                                                                         openingtimes_json
+                                                                                                                                                                                                                                                                    &lt;char&gt;
+1: {""openingTimes"":[{""applicable_days"":31,""periods"":[{""startp"":""06:00"",""endp"":""21:00""}]},{""applicable_days"":32,""periods"":[{""startp"":""07:00"",""endp"":""21:00""}]},{""applicable_days"":64,""periods"":[{""startp"":""09:00"",""endp"":""21:00""}]}]}</code></pre>
+</div>
+</div>
+<p>The variable <code>openingtimes_json</code> contains information on the opening times and will be handled later on. Another issues arises in the raw data. There seems to be no information on how these weird negative prices can be explained. Therefore, I will contact the data provider to get more information on this issue.</p>
+<p>First, I also want to check if these weird observations correspond to the same stations at a different point in time. Therefore, I will check the (randomly chosen) date. 2022-07-12:</p>
+<div class="cell">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># price data for 2022-07-12</span></span>
+<span><span class="va">df_2022_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/prices/2022/07/2022-07-12-prices.csv"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># load station data for the corresponding day to learn more</span></span>
+<span><span class="va">df_stations2022_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/2022/07/2022-07-12-stations.csv"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># correct time zone</span></span>
+<span><span class="va">df_2022_test</span><span class="op">$</span><span class="va">date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html">as.POSIXct</a></span><span class="op">(</span><span class="va">df_2022_test</span><span class="op">$</span><span class="va">date</span>,</span>
+<span>                      format <span class="op">=</span> <span class="st">"%Y-%m-%d %H:%M:%S%z"</span>,</span>
+<span>                      tz <span class="op">=</span> <span class="st">"Europe/Berlin"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># subset the weird observations</span></span>
+<span><span class="va">weird_obs_test</span> <span class="op">&lt;-</span> <span class="va">df_2022_test</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">diesel</span> <span class="op">==</span> <span class="op">-</span><span class="fl">0.001</span> <span class="op">|</span></span>
+<span>                             <span class="va">e10</span> <span class="op">==</span> <span class="op">-</span><span class="fl">0.001</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># give station ids</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">weird_obs_test</span><span class="op">$</span><span class="va">station_uuid</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "23c485e9-303a-4c15-bf9b-81154b424ace"
+[2] "625a3954-c04d-4a34-a051-9a374b0ab37a"</code></pre>
+</div>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># subset the stations with the weird observations</span></span>
+<span><span class="va">weird_stations_test</span> <span class="op">&lt;-</span> <span class="va">df_stations2022_test</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">weird_obs_test</span><span class="op">$</span><span class="va">station_uuid</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># display weird observations of 2021-01-01 and 2023-07-12</span></span>
+<span></span>
+<span><span class="co"># 2021-01-01</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">weird_stations</span><span class="op">$</span><span class="va">name</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Beatrix Betzer"</code></pre>
+</div>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># 2023-07-12</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">weird_stations_test</span><span class="op">$</span><span class="va">name</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Raisa eG"                 "Braun Mineraloelvertrieb"</code></pre>
+</div>
+</div>
+<p>The weird observations do not correspond to the same stations at different points in time.</p>
+<div class="cell">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># clear the environment except raw data df</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ls.html">ls</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"df"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The analysis will only include diesel prices and E10 prices, hence, E5 prices should be omitted early on to save memory.</p>
+<div class="cell">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># remove the e5 variable using the data.table package</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span>, <span class="op">!</span><span class="st">"e5"</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="daily-averages-per-station" class="level4"><h4 class="anchored" data-anchor-id="daily-averages-per-station">Daily Averages per Station</h4>
+<div class="cell">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Extract date only</span></span>
+<span><span class="va">unique_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">date</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>                       tz <span class="op">=</span> <span class="st">"Europe/Berlin"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Group by station_uuid to calculate daily averages, and add the extracted unique date as a column</span></span>
+<span><span class="va">daily_averages</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span></span>
+<span>  avg_diesel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">diesel</span><span class="op">)</span>,</span>
+<span>  avg_e10 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">e10</span><span class="op">)</span></span>
+<span><span class="op">)</span>, by <span class="op">=</span> <span class="va">station_uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">date_only</span> <span class="op">:=</span> <span class="va">unique_date</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># View the result</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">daily_averages</span>,</span>
+<span>     <span class="fl">3</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                           station_uuid avg_diesel  avg_e10  date_only
+                                 &lt;char&gt;      &lt;num&gt;    &lt;num&gt;     &lt;Date&gt;
+1: 5b9216c3-a1bb-4e15-929b-696b8d9fbbf4   1.610176 1.713706 2022-01-01
+2: 3e8b54ba-efd2-48ea-b948-7104f540d930   1.570176 1.673118 2022-01-01
+3: 450457dd-f5a1-4f87-a3b9-019c13bdbbca   1.575000 1.669500 2022-01-01</code></pre>
+</div>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># count the number of observations of daily_averages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">daily_averages</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 13913</code></pre>
+</div>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># should be the same as the number of unique station_uuids</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">station_uuid</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 13913</code></pre>
+</div>
+</div>
+</section><section id="save-data" class="level4"><h4 class="anchored" data-anchor-id="save-data">Save Data</h4>
+<div class="cell">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># Specify the subfolder</span></span>
+<span><span class="va">subfolder</span> <span class="op">&lt;-</span> <span class="st">"../Data/Tankerkoenig/prices_avg"</span></span>
+<span></span>
+<span><span class="co"># save unique date as string to name the saved .csv like that</span></span>
+<span></span>
+<span><span class="va">unique_date_str</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">as.character</a></span><span class="op">(</span><span class="va">unique_date</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Define the full file path including filename</span></span>
+<span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">subfolder</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">unique_date_str</span>, <span class="st">"-avg-price-station.csv.gz"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Save the DataFrame to CSV</span></span>
+<span><span class="co"># write.csv(daily_averages,</span></span>
+<span><span class="co">#           file = file_path,</span></span>
+<span><span class="co">#           row.names = FALSE, </span></span>
+<span><span class="co">#           fileEncoding = "UTF-8")</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># now do the same using the fwrite function, since this is more efficient</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fwrite.html">fwrite</a></span><span class="op">(</span><span class="va">daily_averages</span>,</span>
+<span>       file <span class="op">=</span> <span class="va">file_path</span>,</span>
+<span>       row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To be sure, I test if the saved data can be loaded again and the variables are recocgnized correctly:</p>
+<div class="cell">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/prices_avg/"</span>, <span class="va">unique_date_str</span>, <span class="st">"-avg-price-station.csv.gz"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">test</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classes 'data.table' and 'data.frame':  13913 obs. of  4 variables:
+ $ station_uuid: chr  "5b9216c3-a1bb-4e15-929b-696b8d9fbbf4" "3e8b54ba-efd2-48ea-b948-7104f540d930" "450457dd-f5a1-4f87-a3b9-019c13bdbbca" "4a979b8a-98bb-4e67-b85b-744b5de70e80" ...
+ $ avg_diesel  : num  1.61 1.57 1.57 1.59 1.56 ...
+ $ avg_e10     : num  1.71 1.67 1.67 1.68 1.64 ...
+ $ date_only   : IDate, format: "2022-01-01" "2022-01-01" ...
+ - attr(*, ".internal.selfref")=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">test</span>, <span class="fl">3</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                           station_uuid avg_diesel  avg_e10  date_only
+                                 &lt;char&gt;      &lt;num&gt;    &lt;num&gt;     &lt;IDat&gt;
+1: 5b9216c3-a1bb-4e15-929b-696b8d9fbbf4   1.610176 1.713706 2022-01-01
+2: 3e8b54ba-efd2-48ea-b948-7104f540d930   1.570176 1.673118 2022-01-01
+3: 450457dd-f5a1-4f87-a3b9-019c13bdbbca   1.575000 1.669500 2022-01-01</code></pre>
+</div>
+</div>
+</section></section><section id="big-working-example" class="level3"><h3 class="anchored" data-anchor-id="big-working-example">Big Working Example</h3>
+<section id="stations-data" class="level4"><h4 class="anchored" data-anchor-id="stations-data">Stations Data</h4>
+<div class="cell">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ls.html">ls</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I start by merging the separate station data files, since I have not yet received information on the weird observations in the prices data and might want to change the approach to the data preprocessing.</p>
+<div class="cell">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load the station data for day 1</span></span>
+<span><span class="va">df_stations_day1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># write a for loop that iterates over all days in the year 2022, taking the folder structure into account</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="co"># # create a list of all days in 2022</span></span>
+<span><span class="co"># days &lt;- seq(as.Date("2022-01-01"), as.Date("2022-12-31"), by = "days")</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # create a list of all days in 2022 in the format of the folder structure</span></span>
+<span><span class="co"># days_str &lt;- format(days, "%Y/%m/%Y-%m-%d")</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # create an empty data.table to store the station data</span></span>
+<span><span class="co"># df_stations &lt;- data.table()</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # iterate over all days in 2022</span></span>
+<span><span class="co"># for (day in days_str) {</span></span>
+<span><span class="co">#   # load the station data for the day</span></span>
+<span><span class="co">#   df_stations_day &lt;- fread(paste0("../Data/Tankerkoenig/stations/", day, "-stations.csv"))</span></span>
+<span><span class="co">#   </span></span>
+<span><span class="co">#   # add the date as a column</span></span>
+<span><span class="co">#   df_stations_day[, date := as.Date(day, format = "%Y/%m/%Y-%m-%d")]</span></span>
+<span><span class="co">#   </span></span>
+<span><span class="co">#   # bind the data to the df_stations data.table</span></span>
+<span><span class="co">#   df_stations &lt;- rbind(df_stations, df_stations_day)</span></span>
+<span><span class="co"># }</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="co"># That worked fine, but took way too long. There is a more efficient way.</span></span>
+<span></span>
+<span><span class="co"># More efficient way:</span></span>
+<span></span>
+<span><span class="co"># Create a list of file paths for all days in 2022</span></span>
+<span><span class="va">days</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span></span>
+<span><span class="va">file_paths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/%s-stations.csv"</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span><span class="op">(</span><span class="va">days</span>, <span class="st">"%Y/%m/%Y-%m-%d"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Use lapply to read all files into a list of data.tables</span></span>
+<span><span class="va">data_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_along</a></span><span class="op">(</span><span class="va">file_paths</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="va">file_paths</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">dt</span><span class="op">[</span>, <span class="va">date</span> <span class="op">:=</span> <span class="va">days</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span>  <span class="co"># Add date column</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">dt</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Combine all data.tables into one</span></span>
+<span><span class="va">df_stations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/rbindlist.html">rbindlist</a></span><span class="op">(</span><span class="va">data_list</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "uuid"              "name"              "brand"            
+ [4] "street"            "house_number"      "post_code"        
+ [7] "city"              "latitude"          "longitude"        
+[10] "first_active"      "openingtimes_json" "date"             </code></pre>
+</div>
+</div>
+<p>There are many valuable information in this data.table. Some of the information will be disregarded in the following step, since the scale of this project does not allow for a detailed analysis of all variables. However, this should be kept in mind for future research. For understanding the complex nature of local competition in a more sophisticated way for example, the opening hours of a station could be a valuable variable to assess heterogeneous pricing patterns at different points of the day. The intuition would be that stations that have longer opening hours have higher market power at certain points of time (e.g.&nbsp;at night) and can thus charge higher prices. However, this is not the focus of this project and would not be in the scope of the course <em>Applied Economics</em>.</p>
+<p>The following variables will be omitted:</p>
+<ul>
+<li><p><code>street</code></p></li>
+<li><p><code>house_number</code></p></li>
+<li><p><code>first_active</code></p></li>
+<li><p><code>openingtimes_json</code></p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># omit the variables above</span></span>
+<span><span class="va">df_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"street"</span>, <span class="st">"house_number"</span>, <span class="st">"first_active"</span>, <span class="st">"openingtimes_json"</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># check the structure of the data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classes 'data.table' and 'data.frame':  6072560 obs. of  8 variables:
+ $ uuid     : chr  "0e18d0d3-ed38-4e7f-a18e-507a78ad901d" "44e2bdb7-13e3-4156-8576-8326cdd20459" "ad812258-94e7-473d-aa80-d392f7532218" "ca0b70a2-764b-4682-9c05-cad5af09833e" ...
+ $ name     : chr  "OIL! Tankstelle München" "bft Tankstelle" "bft Bonn-Bad Godesberg" "Shell Steinen Hoellstein Landstr. 19 A" ...
+ $ brand    : chr  "OIL!" "" "bft" "Shell" ...
+ $ post_code: chr  "80999" "36304" "53175" "79585" ...
+ $ city     : chr  "München" "Alsfeld" "Bonn" "Steinen Hoellstein" ...
+ $ latitude : num  48.2 50.8 50.7 47.6 49.4 ...
+ $ longitude: num  11.46 9.28 7.14 7.75 7.01 ...
+ $ date     : Date, format: "2022-01-01" "2022-01-01" ...
+ - attr(*, ".internal.selfref")=&lt;externalptr&gt; </code></pre>
+</div>
+</div>
+<p>Now let’s better understand the data and it’s structure. First, I would like to know how many stations are there on the first day of the year, then I would like to know how many stations were there on the last day of the year.</p>
+<div class="cell">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Find the station count on day one using the date variable and the uuid:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                       uuid     N
+                                     &lt;char&gt; &lt;int&gt;
+    1: 0e18d0d3-ed38-4e7f-a18e-507a78ad901d     1
+    2: 44e2bdb7-13e3-4156-8576-8326cdd20459     1
+    3: ad812258-94e7-473d-aa80-d392f7532218     1
+    4: ca0b70a2-764b-4682-9c05-cad5af09833e     1
+    5: 867d88b1-9326-4727-87ae-2458ee4317a3     1
+   ---                                           
+16475: ede8ba53-6d2e-4422-98bc-5aade7bb2818     1
+16476: 229b5129-b115-55ce-bd9b-dcee6231d624     1
+16477: 2e301163-a54e-4755-9af2-86e0851b6b8c     1
+16478: 292c5218-4398-11ec-8abb-005056a27fa7     1
+16479: f7ac36f9-4397-11ec-8abb-005056a27fa7     1</code></pre>
+</div>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Count of unique stations on the first day of the year</span></span>
+<span><span class="va">stations_day1</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">.N</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Count of unique stations on the last day of the year</span></span>
+<span><span class="va">stations_day_last</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">.N</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Print results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Number of stations on the first day of the year:"</span>, <span class="va">stations_day1</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of stations on the first day of the year: 16479 </code></pre>
+</div>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Number of stations on the last day of the year:"</span>, <span class="va">stations_day_last</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of stations on the last day of the year: 16776 </code></pre>
+</div>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate total difference:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Total difference in stations: +"</span>, <span class="va">stations_day_last</span> <span class="op">-</span> <span class="va">stations_day1</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total difference in stations: + 297 </code></pre>
+</div>
+</div>
+<p>After this, I would even like to know more about the fluctuations in the number of stations over the year, to test the argument that stations (and also competition) is relevantly constant over time. This can only be the case, if there are not many fluctuations. Therefore, I calculate the number of stations for every day in the year 2022 and plot the results using ggplot2.</p>
+<div class="cell">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate the number of unique stations per day</span></span>
+<span><span class="va">stations_over_year</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
+<span>  <span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op">&lt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, </span>
+<span>  <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>  by <span class="op">=</span> <span class="va">date</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Plot the results</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">stations_over_year</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">num_stations</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Number of Stations Over the Year 2022"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Date"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Number of Stations"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="http://jrnold.github.io/ggthemes/reference/theme_few.html">theme_few</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span></span>
+<span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="Data_Prep_files/figure-html/station_counts_over_year-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># let's add dashed lines at the beginning of the year and the end of the year and scale the plot a bit differently</span></span>
+<span></span>
+<span><span class="co"># Add dashed lines and adjust the y-axis scale</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">stations_over_year</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">num_stations</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>,</span>
+<span>             linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
+<span>             color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>,</span>
+<span>             linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
+<span>             color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_y_continuous</a></span><span class="op">(</span></span>
+<span>    limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">stations_over_year</span><span class="op">$</span><span class="va">num_stations</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.9</span>, <span class="fl">1.1</span><span class="op">)</span>,</span>
+<span>    expand <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/expansion.html">expansion</a></span><span class="op">(</span>mult <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Number of Stations Over the Year 2022 (Germany)"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Date"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Number of Stations"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="http://jrnold.github.io/ggthemes/reference/theme_few.html">theme_few</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span></span>
+<span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="Data_Prep_files/figure-html/station_counts_over_year-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>How many brands are there in the data set? How are their numbers distributed?</p>
+<div class="cell">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Count the number of unique brands in the data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">$</span><span class="va">brand</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1077</code></pre>
+</div>
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Distribution of the brands:</span></span>
+<span><span class="va">df_stations</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">N</span><span class="op">)</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                              brand      N
+                             &lt;char&gt;  &lt;int&gt;
+   1:                          ARAL 884676
+   2:                         Shell 664183
+   3:                          ESSO 392172
+   4:                 TotalEnergies 311490
+   5:                          AVIA 266275
+  ---                                     
+1073:             Burger Tankstelle      2
+1074: KÖHN &amp; PLAMBECK GmbH &amp; Co. KG      1
+1075: KÖHN &amp; PLAMBECK (Tankautomat)      1
+1076:         Tankstelle Nordgarage      1
+1077:                     Sb-Tanken      1</code></pre>
+</div>
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Identify the top 10 brands based on the total observations and save them in a variable</span></span>
+<span><span class="va">top_brands</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">N</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="va">brand</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Calculate the number of unique stations (UUIDs) for each top brand</span></span>
+<span><span class="va">top_brands_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
+<span>  <span class="va">brand</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">top_brands</span>, </span>
+<span>  <span class="fu">.</span><span class="op">(</span>unique_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>  by <span class="op">=</span> <span class="va">brand</span></span>
+<span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">unique_stations</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Print the results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">top_brands_stations</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            brand unique_stations
+           &lt;char&gt;           &lt;int&gt;
+ 1:          ARAL            2431
+ 2:         Shell            1821
+ 3:                          1193
+ 4:          ESSO            1077
+ 5: TotalEnergies             856
+ 6:          AVIA             777
+ 7:           JET             712
+ 8:          STAR             571
+ 9:    Raiffeisen             422
+10:           HEM             422</code></pre>
+</div>
+</div>
+<p>Here it can be seen that the third most common brand is simply shown an empty string in the variable <code>brand</code>, implying that there are 1193 stations that are not owned by a brand. In what follows, I assign these stations the brand name “No Brand”. Furthermore, I repeat the steps from above searching for the top 11 brands, to identify the actual top 10 brands (No Brand excluded).</p>
+<div class="cell">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Assign the stations in with an empty brand name the brand name "No Brand"</span></span>
+<span><span class="co"># currently there is simply an empty string in the variable brand</span></span>
+<span><span class="va">df_stations</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">""</span>, <span class="va">brand</span> <span class="op">:=</span> <span class="st">"No Brand"</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Count the number of unique brands in the data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">$</span><span class="va">brand</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1077</code></pre>
+</div>
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Identify the top 11 brands based on the total observations and save them in a variable</span></span>
+<span><span class="va">top_brands</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">N</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">11</span>, <span class="va">brand</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Calculate the number of unique stations (UUIDs) for each top brand</span></span>
+<span><span class="va">top_brands_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
+<span>  <span class="va">brand</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">top_brands</span>, </span>
+<span>  <span class="fu">.</span><span class="op">(</span>unique_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>  by <span class="op">=</span> <span class="va">brand</span></span>
+<span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">unique_stations</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Print the results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">top_brands_stations</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            brand unique_stations
+           &lt;char&gt;           &lt;int&gt;
+ 1:          ARAL            2431
+ 2:         Shell            1821
+ 3:      No Brand            1193
+ 4:          ESSO            1077
+ 5: TotalEnergies             856
+ 6:          AVIA             777
+ 7:           JET             712
+ 8:          STAR             571
+ 9:      AGIP ENI             441
+10:    Raiffeisen             422
+11:           HEM             422</code></pre>
+</div>
+</div>
+<p>Now, how do the fluctuations of station counts look across the top brand? Are there any brands that actively whiden their market share in terms of stations?</p>
+<div class="cell">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate daily unique station counts for top 10 brands</span></span>
+<span><span class="va">brand_station_trends</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
+<span>  <span class="va">brand</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">top_brands</span>, </span>
+<span>  <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>  by <span class="op">=</span> <span class="fu">.</span><span class="op">(</span><span class="va">brand</span>, <span class="va">date</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">brand_station_trends</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">num_stations</span>, color <span class="op">=</span> <span class="va">brand</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Trends in Unique Stations for Top 10 Brands (2022)"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Date"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Dayly Station Count"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="http://jrnold.github.io/ggthemes/reference/theme_few.html">theme_few</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span></span>
+<span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>    legend.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="Data_Prep_files/figure-html/fluctuations_topbrands-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>What’s up with this peak of stations for the brand “No Brand” in the middle of the year? Let’s find out:</p>
+<div class="cell">
+<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Find the date of the peak for the brand "No Brand"</span></span>
+<span><span class="va">df_stations</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">date</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">num_stations</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         date num_stations
+       &lt;Date&gt;        &lt;int&gt;
+1: 2022-05-25         1131</code></pre>
+</div>
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># subset the count data for all stations of the brand "No Brand" over the year</span></span>
+<span><span class="va">no_brand_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">date</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># The count of stations is relatively stable, exept for the dates 2022-05-25 and 2022-05-26. Why is this?</span></span>
+<span></span>
+<span><span class="co"># create a data.table with all observations of df_stations for the dates 2022-05-25 and 2022-05-26</span></span>
+<span><span class="va">df_05_25_05_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-25"</span>, <span class="st">"2022-05-26"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># Are the number of observation in total higher on these two days then the days around them?</span></span>
+<span></span>
+<span><span class="co"># The two weird candidates</span></span>
+<span><span class="va">df_05_25</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-25"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-26"</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># The day before and after</span></span>
+<span><span class="va">df_05_24</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-24"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Count the number of observations for each day</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_24</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 16594</code></pre>
+</div>
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_25</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 16610</code></pre>
+</div>
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_26</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 16610</code></pre>
+</div>
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_27</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 16610</code></pre>
+</div>
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># How can this be</span></span>
+<span></span>
+<span><span class="co"># Compare 2022-05-26 with 2022-05-27</span></span>
+<span><span class="va">df_05_26_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-26"</span>, <span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># count the number of "no brand" stations for each day</span></span>
+<span><span class="va">df_05_26_27</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">date</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         date     N
+       &lt;Date&gt; &lt;int&gt;
+1: 2022-05-26  1131
+2: 2022-05-27   675</code></pre>
+</div>
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># If the Number of observations for both days are the same and one day prior there where more stations that are assigned to "no brand", then it means that some stations are actually of a brand and it is not recorded in the data. This can be traced back later on using the uuid. But first, I need to identify the stations that are assigned to "no brand" on 2022-05-26 disappear from that brand assignment on the next day:</span></span>
+<span></span>
+<span><span class="co"># Extract the UUIDs of "No Brand" stations for both days</span></span>
+<span><span class="va">no_brand_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-26"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">no_brand_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Find stations in "No Brand" on 2022-05-26 but not on 2022-05-27</span></span>
+<span><span class="va">disappeared_stations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html">setdiff</a></span><span class="op">(</span><span class="va">no_brand_26</span>, <span class="va">no_brand_27</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># disappeared_stations has a lengh of 456 (1131 - 675)</span></span>
+<span></span>
+<span><span class="co"># Extract data for these stations for both days to investigate further</span></span>
+<span><span class="va">disappeared_data</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
+<span>  <span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">disappeared_stations</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-26"</span>, <span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># Check brand assignment for these stations on 2022-05-27</span></span>
+<span><span class="va">Stations_that_changed</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">disappeared_stations</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span>, <span class="fu">.</span><span class="op">(</span><span class="va">uuid</span>, <span class="va">brand</span>, <span class="va">city</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># give counts of the brands in Stations_that_changed</span></span>
+<span><span class="va">Stations_that_changed</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        brand     N
+       &lt;char&gt; &lt;int&gt;
+1:        HEM   419
+2:     TAMOIL    14
+3:         SB     7
+4:         GO    15
+5: Supermarkt     1</code></pre>
+</div>
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># show cities that were affected of the probable data error</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">Stations_that_changed</span><span class="op">$</span><span class="va">city</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] "GÃ¼strow"                    "GrÃ¶nwohld"                 
+  [3] "GrÃ¶ningen"                  "Grevenbroich"               
+  [5] "Haldensleben"                "Goldberg"                   
+  [7] "Gnoien"                      "Gifhorn"                    
+  [9] "Giesen"                      "Geldern"                    
+ [11] "Geesthacht"                  "Garbsen"                    
+ [13] "GÃ¤gelow"                    "FÃ¼rstenau"                 
+ [15] "Elmshorn"                    "Elbingerode"                
+ [17] "Eimke"                       "Dortmund"                   
+ [19] "Demmin"                      "Dahlen"                     
+ [21] "Burgdorf"                    "Bredstedt"                  
+ [23] "Braunschweig"                "Boppard"                    
+ [25] "Bodenwerder"                 "Bernburg"                   
+ [27] "Berlin"                      "Bergkamen"                  
+ [29] "Admannshagen-Bargeshagen"    "Baddeckenstedt"             
+ [31] "Bad Salzdetfurth"            "Bad Lauterberg"             
+ [33] "Bad Langensalza"             "Arnsdorf"                   
+ [35] "Aken"                        "Hamburg"                    
+ [37] "Hamdorf"                     "Hannover"                   
+ [39] "Harsefeld"                   "Hechthausen"                
+ [41] "Hildesheim"                  "Holzendorf"                 
+ [43] "Bad Bergzabern"              "Ketzin"                     
+ [45] "Korschenbroich"              "Gardelegen"                 
+ [47] "Loitz"                       "Ludwigslust"                
+ [49] "Lychen"                      "Magdeburg"                  
+ [51] "Meyenburg"                   "Premnitz"                   
+ [53] "Neukloster"                  "Neustadt in Holstein"       
+ [55] "Neustadt-Glewe"              "KÃ¶nigs Wusterhausen"       
+ [57] "Nienburg"                    "Northeim"                   
+ [59] "Oberlungwitz"                "Parchen"                    
+ [61] "Peine"                       "Penzlin"                    
+ [63] "SchmÃ¶lln-Putzkau"           "Querfurt"                   
+ [65] "Ribnitz-Damgarten"           "Reuterstadt Stavenhagen"    
+ [67] "Salzgitter"                  "Schellerten"                
+ [69] "Schleiz"                     "Schlieben"                  
+ [71] "SchÃ¶nberg"                  "SchÃ¶neiche"                
+ [73] "Schwaan"                     "Panketal"                   
+ [75] "Schwerin"                    "Seelze"                     
+ [77] "Soest"                       "Tessin"                     
+ [79] "Stadthagen"                  "Torgelow"                   
+ [81] "UeckermÃ¼nde"                "Uelzen"                     
+ [83] "Teupitz"                     "Unna"                       
+ [85] "Velten"                      "Walkenried"                 
+ [87] "Wandlitz"                    "Wentorf"                    
+ [89] "Werne"                       "WesterrÃ¶nfeld"             
+ [91] "Wildeshausen"                "Wittstock"                  
+ [93] "Wolgast"                     "Schwieberdingen"            
+ [95] "Breisach"                    "SaarbrÃ¼cken"               
+ [97] "Kirchzarten"                 "Bensheim"                   
+ [99] "Freiburg"                    "GroÃ\u009fenkneten"         
+[101] "Norderstedt"                 "Augsburg"                   
+[103] "Castrop-Rauxel"              "Herne"                      
+[105] "Kraiburg"                    "MÃ¼nchen"                   
+[107] "Witten"                      "Neustrelitz"                
+[109] "Menden"                      "Gera"                       
+[111] "Kummerfeld"                  "Gelsenkirchen"              
+[113] "Bargteheide"                 "Kiel"                       
+[115] "Gotha"                       "Heidenheim"                 
+[117] "Xanten"                      "Essen"                      
+[119] "Haltern am See"              "Regensburg"                 
+[121] "Marktheidenfeld"             "Leverkusen"                 
+[123] "Mainz"                       "Nattheim"                   
+[125] "Bergisch Gladbach"           "MÃ¶nchengladbach"           
+[127] "Bochum"                      "NÃ¼rnberg"                  
+[129] "Wuppertal"                   "Ã\u009cberlingen"           
+[131] "Nierstein"                   "Pirna"                      
+[133] "Dorf Mecklenburg"            "Hohen Neuendorf"            
+[135] "Lutherstadt Wittenberg"      "Rauenberg"                  
+[137] "SchwÃ¤bisch GmÃ¼nd"          "Beverstedt"                 
+[139] "Ritterhude"                  "Bremen"                     
+[141] "Rimbach"                     "BrÃ¼nzow"                   
+[143] "Glinde"                      "Pfungstadt"                 
+[145] "Bad Honnef"                  "Bonn"                       
+[147] "Eitorf"                      "Windeck"                    
+[149] "Baden-Baden"                 "MÃ¼llheim"                  
+[151] "Griesheim"                   "LÃ¼neburg"                  
+[153] "Ehningen"                    "Oberursel"                  
+[155] "SchÃ¶naich"                  "WÃ¼rzburg"                  
+[157] "Crailsheim"                  "Schwabach"                  
+[159] "Bergheim"                    "Mannheim"                   
+[161] "Bad Harzburg"                "Ebhausen"                   
+[163] "Hanau"                       "Limburg"                    
+[165] "Thaleischweiler-FrÃ¶schen"   "Frankfurt"                  
+[167] "Stuttgart"                   "Hockenheim"                 
+[169] "Ludwigshafen"                "Villingen-Schwenningen"     
+[171] "Kornwestheim"                "NeuÃ¶tting"                 
+[173] "Zwickau"                     "Leipzig"                    
+[175] "LÃ¼bben"                     "Neubrandenburg"             
+[177] "Ulm"                         "Siegen"                     
+[179] "Torgau"                      "Helmstedt"                  
+[181] "Weimar"                      "SchÃ¶nefeld"                
+[183] "Bernburg (Saale)"            "Brandenburg"                
+[185] "Aerzen"                      "BÃ¼ckeburg"                 
+[187] "Calberlah"                   "DrÃ¼beck"                   
+[189] "Egeln"                       "Eicklingen"                 
+[191] "Einbeck"                     "Jerichow"                   
+[193] "Meine"                       "Nordstemmen"                
+[195] "Schladen"                    "Hecklingen"                 
+[197] "Sehnde"                      "Springe"                    
+[199] "Uetze"                       "UnterlÃ¼Ã\u009f"            
+[201] "Thale"                       "WolfenbÃ¼ttel"              
+[203] "Alfeld"                      "Burgwedel"                  
+[205] "Celle"                       "Grasleben"                  
+[207] "Hessisch Oldendorf"          "Langenhagen"                
+[209] "Lindhorst"                   "Vechelde"                   
+[211] "Querenhorst"                 "Bendestorf"                 
+[213] "Biederitz"                   "Bremerhaven"                
+[215] "Chemnitz"                    "Clausthal-Zellerfeld"       
+[217] "Datteln"                     "Eisenach"                   
+[219] "Friedberg"                   "Goslar"                     
+[221] "KÃ¶then"                     "Munster"                    
+[223] "Oststeinbek"                 "Pinneberg"                  
+[225] "Schwetzingen"                "Bad Driburg"                
+[227] "LÃ¼nen"                      "Kritzow"                    
+[229] "Irxleben"                    "Edenkoben"                  
+[231] "Dettingen unter Teck"        "MÃ¼hltal"                   
+[233] "DÃ¼sseldorf"                 "Kleinheubach"               
+[235] "Gadebusch"                   "Lichtenau"                  
+[237] "Wedel"                       "Bad Frankenhausen"          
+[239] "Kaaks"                       "Dardesheim"                 
+[241] "StaÃ\u009ffurt"              "Stuhr"                      
+[243] "Brokenlande"                 "Dresden"                    
+[245] "Parchim"                     "Eggesin"                    
+[247] "Bitterfeld"                  "Zeven"                      
+[249] "Sinsheim"                    "Rostock"                    
+[251] "Eime"                        "Engen"                      
+[253] "Wilhelmshaven"               "LÃ¼beck"                    
+[255] "Westerstede"                 "Erfurt"                     
+[257] "Gelnhausen"                  "DoberschÃ¼tz"               
+[259] "Bitterfeld-Wolfen"           "Laage"                      
+[261] "Wolfsburg"                   "Anklam"                     
+[263] "Grammetal OT Nohra"          "Burg"                       
+[265] "Ratzeburg"                   "LÃ¶ffingen"                 
+[267] "Eberswalde"                  "Ahlen"                      
+[269] "Bielefeld"                   "Hagen"                      
+[271] "Harsewinkel"                 "Seesen"                     
+[273] "Hamm"                        "Salzwedel"                  
+[275] "Ziesar"                      "Kritzmow"                   
+[277] "Heilbad Heiligenstadt"       "GrÃ¤fenhainichen"           
+[279] "Beckdorf"                    "Bad Oldesloe"               
+[281] "Altmittweida"                "SchÃ¶nwalde"                
+[283] "Burg Stargard"               "LÃ¼bbenau"                  
+[285] "Potsdam"                     "Parey"                      
+[287] "Goch"                        "Kreuzwertheim"              
+[289] "Kaiserslautern"              "Lohne"                      
+[291] "Donaueschingen"              "Marktsteft"                 
+[293] "Rockenhausen"                "Dillingen a. d. Donau"      
+[295] "GeorgsmarienhÃ¼tte"          "Bad Sassendorf"             
+[297] "Rottach-Egern"               "Lonsee"                     
+[299] "MÃ¶ssingen"                  "Marbach am Neckar"          
+[301] "Oerlenbach"                  "NÃ¼rnberg-Schweinau"        
+[303] "Cremlingen"                  "MÃ¶ttingen"                 
+[305] "Markdorf"                    "Ã\u009cbersee"              
+[307] "Wolnzach"                    "Wassenberg"                 
+[309] "Jork"                        "DeiÃ\u009flingen"           
+[311] "Erbach"                      "Jena"                       
+[313] "Kirchheimbolanden"           "Witzenhausen"               
+[315] "Bad Salzuflen"               "Kolbermoor"                 
+[317] "Velbert"                     "GrÃ¼ndau"                   
+[319] "Backnang"                    "Werther"                    
+[321] "Murr"                        "Weinheim"                   
+[323] "Meerane"                     "Hollenstedt"                
+[325] "Ubstadt-Weiher"              "Kaufbeuren"                 
+[327] "Schmidgaden-Trisching"       "Schifferstadt"              
+[329] "Ertingen"                    "Holzgerlingen"              
+[331] "Ebersdorf"                   "Titisee-Neustadt"           
+[333] "Seukendorf"                  "Langerwehe"                 
+[335] "Lindenberg"                  "Sengenthal"                 
+[337] "Straubing"                   "Gau-Algesheim"              
+[339] "Eislingen/Fils"              "Altlandsberg OT BruchmÃ¼hle"
+[341] "Plattling"                   "Selm"                       
+[343] "OsnabrÃ¼ck"                  "Rottendorf"                 
+[345] "BÃ¼hl"                       "Laatzen"                    
+[347] "Frankenthal"                 "Bad Mergentheim"            
+[349] "Leck"                        "Barsinghausen"              
+[351] "Hollern Twielenfleth"        "Bayreuth"                   
+[353] "Wesenberg"                   "Schwarmstedt"               
+[355] "Alsleben"                    "Langelsheim"                
+[357] "TangermÃ¼nde"                "Marl"                       
+[359] "Osterode"                    "Schlangen"                  </code></pre>
+</div>
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># There seems to be no pattern, at least not directly</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A short assessment does not show any pattern to why there are some stations that are assigned to “No Brand” on 2022-05-26 and are assigned to a brand on 2022-05-27. It is likely an error in the raw data. Further research could asses this in more detail, plotting a map of the stations that are affected, maybe revealing any spatial patterns. This is however not important for the further assessment of my research question and can therefore be disregarded.</p>
+<div class="cell">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># clear the environment except raw data df</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ls.html">ls</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"df_stations"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section></section></section><section id="prix-des-carburants-en-france" class="level2"><h2 class="anchored" data-anchor-id="prix-des-carburants-en-france">Prix des carburants en France</h2>
+<section id="small-working-example-1" class="level3"><h3 class="anchored" data-anchor-id="small-working-example-1">Small Working Example</h3>
+<section id="loading-data-1" class="level4"><h4 class="anchored" data-anchor-id="loading-data-1">Loading Data</h4>
+<div class="cell">
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># getwd()</span></span>
+<span><span class="co"># # load the data</span></span>
+<span><span class="co"># df_FRA &lt;- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.csv")</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># df_FRA2 &lt;- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v3.csv")</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # library(jsonlite)</span></span>
+<span><span class="co"># json_data &lt;- fromJSON("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.json", flatten = TRUE)</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># str(json_data)</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># dt &lt;- as.data.table(json_data)</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># str(dt)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="cleaning-data" class="level4"><h4 class="anchored" data-anchor-id="cleaning-data">Cleaning Data</h4>
+<div class="cell">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># give a list of the variable names</span></span>
+<span><span class="co"># names(df_FRA)</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # Aim: Clean rename the colums to English </span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # Convert the data frame to a data.table for efficiency</span></span>
+<span><span class="co"># setDT(df_FRA)</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # Rename columns</span></span>
+<span><span class="co"># setnames(df_FRA, </span></span>
+<span><span class="co">#          old = c("id", "latitude", "longitude", "Code postal", "pop", "Adresse", </span></span>
+<span><span class="co">#                  "Ville", "services", "prix", "rupture", "horaires", "geom", </span></span>
+<span><span class="co">#                  "Prix Gazole mis à jour le", "Prix Gazole", </span></span>
+<span><span class="co">#                  "Prix SP95 mis à jour le", "Prix SP95", </span></span>
+<span><span class="co">#                  "Prix E85 mis à jour le", "Prix E85", </span></span>
+<span><span class="co">#                  "Prix GPLc mis à jour le", "Prix GPLc", </span></span>
+<span><span class="co">#                  "Prix E10 mis à jour le", "Prix E10", </span></span>
+<span><span class="co">#                  "Prix SP98 mis à jour le", "Prix SP98", </span></span>
+<span><span class="co">#                  "Début rupture e10 (si temporaire)", "Type rupture e10", </span></span>
+<span><span class="co">#                  "Début rupture sp98 (si temporaire)", "Type rupture sp98", </span></span>
+<span><span class="co">#                  "Début rupture sp95 (si temporaire)", "Type rupture sp95", </span></span>
+<span><span class="co">#                  "Début rupture e85 (si temporaire)", "Type rupture e85", </span></span>
+<span><span class="co">#                  "Début rupture GPLc (si temporaire)", "Type rupture GPLc", </span></span>
+<span><span class="co">#                  "Début rupture gazole (si temporaire)", "Type rupture gazole", </span></span>
+<span><span class="co">#                  "Carburants disponibles", "Carburants indisponibles", </span></span>
+<span><span class="co">#                  "Carburants en rupture temporaire", "Carburants en rupture definitive", </span></span>
+<span><span class="co">#                  "Automate 24-24 (oui/non)", "Services proposés", </span></span>
+<span><span class="co">#                  "Département", "code_departement", "Région", "code_region", </span></span>
+<span><span class="co">#                  "horaires détaillés"), </span></span>
+<span><span class="co">#          new = c("id", "latitude", "longitude", "postal_code", "population", </span></span>
+<span><span class="co">#                  "address", "city", "services", "price", "out_of_stock", </span></span>
+<span><span class="co">#                  "hours", "geometry", "diesel_price_updated_on", "diesel_price", </span></span>
+<span><span class="co">#                  "SP95_price_updated_on", "SP95_price", "E85_price_updated_on", </span></span>
+<span><span class="co">#                  "E85_price", "GPLc_price_updated_on", "GPLc_price", </span></span>
+<span><span class="co">#                  "E10_price_updated_on", "E10_price", "SP98_price_updated_on", </span></span>
+<span><span class="co">#                  "SP98_price", "E10_out_of_stock_start", "E10_out_of_stock_type", </span></span>
+<span><span class="co">#                  "SP98_out_of_stock_start", "SP98_out_of_stock_type", </span></span>
+<span><span class="co">#                  "SP95_out_of_stock_start", "SP95_out_of_stock_type", </span></span>
+<span><span class="co">#                  "E85_out_of_stock_start", "E85_out_of_stock_type", </span></span>
+<span><span class="co">#                  "GPLc_out_of_stock_start", "GPLc_out_of_stock_type", </span></span>
+<span><span class="co">#                  "diesel_out_of_stock_start", "diesel_out_of_stock_type", </span></span>
+<span><span class="co">#                  "available_fuels", "unavailable_fuels", </span></span>
+<span><span class="co">#                  "temporarily_out_of_stock_fuels", "permanently_out_of_stock_fuels", </span></span>
+<span><span class="co">#                  "self_service_24_7", "offered_services", "department", </span></span>
+<span><span class="co">#                  "department_code", "region", "region_code", "detailed_hours"))</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # check the structure of the data</span></span>
+<span><span class="co"># str(df_FRA)</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # clear environment </span></span>
+<span><span class="co"># rm(list = ls())</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section></section></section><section id="prix-des-carburants-en-france-xml" class="level2"><h2 class="anchored" data-anchor-id="prix-des-carburants-en-france-xml">Prix des carburants en France XML</h2>
+<div class="cell">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># XML-Datei einlesen</span></span>
+<span><span class="va">xml_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://xml2.r-lib.org/reference/read_xml.html">read_xml</a></span><span class="op">(</span><span class="st">"../Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># XML-Struktur anzeigen</span></span>
+<span><span class="co"># xml_structure(xml_data)</span></span>
+<span></span>
+<span><span class="co"># XML-Datei in ein Dataframe umwandeln</span></span>
+<span><span class="co"># xml_df &lt;- as_data_frame(xml_data)</span></span>
+<span></span>
+<span><span class="co"># df &lt;- xmlToDataFrame(nodes = getNodeSet(xml_data))</span></span>
+<span></span>
+<span><span class="co"># extract pdv_liste</span></span>
+<span><span class="va">test</span> <span class="op">&lt;-</span> <span class="va">xml_data</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="http://xml2.r-lib.org/reference/xml_find_all.html">xml_find_all</a></span><span class="op">(</span><span class="st">"//pdv_liste/pdv"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+</section><div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-Frondel2024" class="csl-entry" role="listitem">
+Frondel, Manuel, Patrick Thiel, and Colin Vance. 2024. <span>“Heterogeneous Pass-Through over Space and Time: The Case of Germany’s Fuel Tax Discount.”</span> <em>SSRN Electronic Journal</em>. <a href="https://doi.org/10.2139/ssrn.4785571">https://doi.org/10.2139/ssrn.4785571</a>.
+</div>
+</div></section></div></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
