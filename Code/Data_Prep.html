@@ -5,7 +5,7 @@
 <meta name="generator" content="quarto-1.4.551">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Jannes Ehrhardt">
-<meta name="dcterms.date" content="2024-11-15">
+<meta name="dcterms.date" content="2024-11-23">
 <title>Data Preprocessing</title>
 <style>
 code{white-space: pre-wrap;}
@@ -112,24 +112,13 @@ div.csl-indent {
   <li>
 <a href="#big-working-example" id="toc-big-working-example" class="nav-link" data-scroll-target="#big-working-example">Big Working Example</a>
   <ul class="collapse">
-<li><a href="#stations-data" id="toc-stations-data" class="nav-link" data-scroll-target="#stations-data">Stations Data</a></li>
+<li><a href="#price-data" id="toc-price-data" class="nav-link" data-scroll-target="#price-data">Price Data</a></li>
+  <li><a href="#stations-data" id="toc-stations-data" class="nav-link" data-scroll-target="#stations-data">Stations Data</a></li>
   </ul>
 </li>
   </ul>
 </li>
-  <li>
-<a href="#prix-des-carburants-en-france" id="toc-prix-des-carburants-en-france" class="nav-link" data-scroll-target="#prix-des-carburants-en-france">Prix des carburants en France</a>
-  <ul>
-<li>
-<a href="#small-working-example-1" id="toc-small-working-example-1" class="nav-link" data-scroll-target="#small-working-example-1">Small Working Example</a>
-  <ul class="collapse">
-<li><a href="#loading-data-1" id="toc-loading-data-1" class="nav-link" data-scroll-target="#loading-data-1">Loading Data</a></li>
-  <li><a href="#cleaning-data" id="toc-cleaning-data" class="nav-link" data-scroll-target="#cleaning-data">Cleaning Data</a></li>
-  </ul>
-</li>
-  </ul>
-</li>
-  <li><a href="#prix-des-carburants-en-france-xml" id="toc-prix-des-carburants-en-france-xml" class="nav-link" data-scroll-target="#prix-des-carburants-en-france-xml">Prix des carburants en France XML</a></li>
+  <li><a href="#prix-des-carburants-en-france" id="toc-prix-des-carburants-en-france" class="nav-link" data-scroll-target="#prix-des-carburants-en-france">Prix des carburants en France</a></li>
   </ul></nav>
 </div>
 <main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
@@ -150,7 +139,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 15, 2024</p>
+      <p class="date">November 23, 2024</p>
     </div>
   </div>
   
@@ -173,7 +162,10 @@ div.csl-indent {
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/">purrr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xml2.r-lib.org/">xml2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.omegahat.net/RSXML/">XML</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/">microbenchmark</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/">microbenchmark</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://lubridate.tidyverse.org">lubridate</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://docs.ropensci.org/visdat/">visdat</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://zoo.R-Forge.R-project.org/">zoo</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="directories" class="level2"><h2 class="anchored" data-anchor-id="directories">Directories</h2>
 <p>This project will be pushed to a remote repository on gitlab. Therefore, the the working directory is set in a relative way to minimize steps while rerunning the code.</p>
@@ -192,7 +184,7 @@ div.csl-indent {
 <section id="loading-data" class="level4"><h4 class="anchored" data-anchor-id="loading-data">Loading Data</h4>
 <div class="cell">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># move up to project root and read data from data subfolder</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/prices/2022/01/2022-01-01-prices.csv"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/prices/2022/01/2022-01-01-prices.csv"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="data-preprocessing" class="level4"><h4 class="anchored" data-anchor-id="data-preprocessing">Data Preprocessing</h4>
 <p>Now, let’s explore the data. First, the date variable is not correctly read by default and needs to be corrected to German time zone:</p>
@@ -314,7 +306,7 @@ div.csl-indent {
 <pre><code>[1] "62edbe52-684e-43fb-8096-39e943ae6fc7"</code></pre>
 </div>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load station data for the corresponding day to learn more</span></span>
-<span><span class="va">df_stations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv"</span><span class="op">)</span></span>
+<span><span class="va">df_stations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># subset the stations with the weird observations</span></span>
 <span><span class="va">weird_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
@@ -340,10 +332,10 @@ div.csl-indent {
 <p>First, I also want to check if these weird observations correspond to the same stations at a different point in time. Therefore, I will check the (randomly chosen) date. 2022-07-12:</p>
 <div class="cell">
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># price data for 2022-07-12</span></span>
-<span><span class="va">df_2022_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/prices/2022/07/2022-07-12-prices.csv"</span><span class="op">)</span></span>
+<span><span class="va">df_2022_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/prices/2022/07/2022-07-12-prices.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># load station data for the corresponding day to learn more</span></span>
-<span><span class="va">df_stations2022_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/2022/07/2022-07-12-stations.csv"</span><span class="op">)</span></span>
+<span><span class="va">df_stations2022_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/stations/2022/07/2022-07-12-stations.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># correct time zone</span></span>
 <span><span class="va">df_2022_test</span><span class="op">$</span><span class="va">date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html">as.POSIXct</a></span><span class="op">(</span><span class="va">df_2022_test</span><span class="op">$</span><span class="va">date</span>,</span>
@@ -391,7 +383,7 @@ div.csl-indent {
 </section><section id="daily-averages-per-station" class="level4"><h4 class="anchored" data-anchor-id="daily-averages-per-station">Daily Averages per Station</h4>
 <div class="cell">
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Extract date only</span></span>
-<span><span class="va">unique_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">date</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span><span class="va">unique_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">date</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
 <span>                       tz <span class="op">=</span> <span class="st">"Europe/Berlin"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Group by station_uuid to calculate daily averages, and add the extracted unique date as a column</span></span>
@@ -425,7 +417,7 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co"># Specify the subfolder</span></span>
-<span><span class="va">subfolder</span> <span class="op">&lt;-</span> <span class="st">"../Data/Tankerkoenig/prices_avg"</span></span>
+<span><span class="va">subfolder</span> <span class="op">&lt;-</span> <span class="st">"../../Data/Tankerkoenig/prices_avg"</span></span>
 <span></span>
 <span><span class="co"># save unique date as string to name the saved .csv like that</span></span>
 <span></span>
@@ -448,7 +440,7 @@ div.csl-indent {
 </div>
 <p>To be sure, I test if the saved data can be loaded again and the variables are recocgnized correctly:</p>
 <div class="cell">
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/prices_avg/"</span>, <span class="va">unique_date_str</span>, <span class="st">"-avg-price-station.csv.gz"</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/prices_avg/"</span>, <span class="va">unique_date_str</span>, <span class="st">"-avg-price-station.csv.gz"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">test</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -467,16 +459,106 @@ div.csl-indent {
 2: 3e8b54ba-efd2-48ea-b948-7104f540d930   1.570176 1.673118 2022-01-01
 3: 450457dd-f5a1-4f87-a3b9-019c13bdbbca   1.575000 1.669500 2022-01-01</code></pre>
 </div>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">test</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> station_uuid         avg_diesel       avg_e10         date_only         
+ Length:13913       Min.   :0.000   Min.   :-0.001   Min.   :2022-01-01  
+ Class :character   1st Qu.:1.558   1st Qu.: 1.637   1st Qu.:2022-01-01  
+ Mode  :character   Median :1.579   Median : 1.669   Median :2022-01-01  
+                    Mean   :1.583   Mean   : 1.586   Mean   :2022-01-01  
+                    3rd Qu.:1.601   3rd Qu.: 1.695   3rd Qu.:2022-01-01  
+                    Max.   :1.926   Max.   : 2.019   Max.   :2022-01-01  </code></pre>
+</div>
 </div>
 </section></section><section id="big-working-example" class="level3"><h3 class="anchored" data-anchor-id="big-working-example">Big Working Example</h3>
-<section id="stations-data" class="level4"><h4 class="anchored" data-anchor-id="stations-data">Stations Data</h4>
+<section id="price-data" class="level4"><h4 class="anchored" data-anchor-id="price-data">Price Data</h4>
 <div class="cell">
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ls.html">ls</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Define start and end dates</span></span>
+<span><span class="va">start_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span></span>
+<span><span class="va">end_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Define folder paths</span></span>
+<span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="st">"../../Data/Tankerkoenig/prices"</span></span>
+<span><span class="va">output_dir</span> <span class="op">&lt;-</span> <span class="st">"../../Data/Tankerkoenig/prices_avg"</span></span>
+<span></span>
+<span><span class="co"># Create output directory if it doesn't exist</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Loop through each date in the range</span></span>
+<span><span class="va">current_date</span> <span class="op">&lt;-</span> <span class="va">start_date</span></span>
+<span><span class="kw">while</span> <span class="op">(</span><span class="va">current_date</span> <span class="op">&lt;=</span> <span class="va">end_date</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  </span>
+<span>  <span class="co"># Generate file path based on the date structure</span></span>
+<span>  <span class="va">year</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span><span class="op">(</span><span class="va">current_date</span>, <span class="st">"%Y"</span><span class="op">)</span></span>
+<span>  <span class="va">month</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span><span class="op">(</span><span class="va">current_date</span>, <span class="st">"%m"</span><span class="op">)</span></span>
+<span>  <span class="va">day</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span><span class="op">(</span><span class="va">current_date</span>, <span class="st">"%Y-%m-%d"</span><span class="op">)</span></span>
+<span>  <span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">data_dir</span>, <span class="va">year</span>, <span class="va">month</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">day</span>, <span class="st">"-prices.csv"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># Check if the file exists</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    </span>
+<span>    <span class="co"># Load data for the day</span></span>
+<span>    <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Correct the date variable to German time zone</span></span>
+<span>    <span class="va">df</span><span class="op">$</span><span class="va">date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html">as.POSIXct</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">date</span>, format <span class="op">=</span> <span class="st">"%Y-%m-%d %H:%M:%S%z"</span>,</span>
+<span>                          tz <span class="op">=</span> <span class="st">"Europe/Berlin"</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Filter out unusual negative values in price columns</span></span>
+<span>    <span class="va">df</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">diesel</span> <span class="op">&gt;=</span> <span class="fl">0</span>, <span class="va">e10</span> <span class="op">&gt;=</span> <span class="fl">0</span>, <span class="va">e5</span> <span class="op">&gt;=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># omit e5</span></span>
+<span>    <span class="va">df</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span>, <span class="op">!</span><span class="st">"e5"</span><span class="op">]</span></span>
+<span>    </span>
+<span>    <span class="co"># Calculate daily averages per station</span></span>
+<span>    <span class="va">unique_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">date</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, tz <span class="op">=</span> <span class="st">"Europe/Berlin"</span><span class="op">)</span></span>
+<span>    <span class="va">daily_averages</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span></span>
+<span>      avg_diesel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">diesel</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>      avg_e10 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">e10</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>, by <span class="op">=</span> <span class="va">station_uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">date_only</span> <span class="op">:=</span> <span class="va">unique_date</span><span class="op">]</span></span>
+<span>    </span>
+<span>    <span class="co"># Define file name for saving</span></span>
+<span>    <span class="va">output_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">unique_date</span>,</span>
+<span>                                                <span class="st">"-avg-price-station.csv.gz"</span><span class="op">)</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Save daily averages to CSV</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fwrite.html">fwrite</a></span><span class="op">(</span><span class="va">daily_averages</span>, <span class="va">output_file</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    </span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html">message</a></span><span class="op">(</span><span class="st">"File not found for date: "</span>,</span>
+<span>            <span class="va">current_date</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="co"># Move to the next day</span></span>
+<span>  <span class="va">current_date</span> <span class="op">&lt;-</span> <span class="va">current_date</span> <span class="op">+</span> <span class="fl">1</span></span>
+<span><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Schritt 1: Liste der Dateinamen</span></span>
+<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="st">"../../Data/Tankerkoenig/prices_avg"</span>  <span class="co"># Pfad zum Ordner</span></span>
+<span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span><span class="va">path</span>, pattern <span class="op">=</span> <span class="st">"\\.csv\\.gz$"</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Schritt 2: Dateien einlesen und Schritt 3: Zusammenführen</span></span>
+<span><span class="va">combined_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/rbindlist.html">rbindlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">files</span>, <span class="va">fread</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># order nach id</span></span>
+<span><span class="va">combined_data</span> <span class="op">&lt;-</span> <span class="va">combined_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">station_uuid</span>, <span class="va">date_only</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Schritt 4: Speichern</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fwrite.html">fwrite</a></span><span class="op">(</span><span class="va">combined_data</span>,</span>
+<span>       <span class="st">"../../Data/Tankerkoenig/prices_avg/Combined/daily_avg_prices_GER.csv.gz"</span>,</span>
+<span>       row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="stations-data" class="level4"><h4 class="anchored" data-anchor-id="stations-data">Stations Data</h4>
+<div class="cell">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ls.html">ls</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>I start by merging the separate station data files, since I have not yet received information on the weird observations in the prices data and might want to change the approach to the data preprocessing.</p>
 <div class="cell">
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load the station data for day 1</span></span>
-<span><span class="va">df_stations_day1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load the station data for day 1</span></span>
+<span><span class="va">df_stations_day1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html">fread</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/stations/2022/01/2022-01-01-stations.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># write a for loop that iterates over all days in the year 2022, taking the folder structure into account</span></span>
 <span></span>
@@ -510,8 +592,9 @@ div.csl-indent {
 <span><span class="co"># More efficient way:</span></span>
 <span></span>
 <span><span class="co"># Create a list of file paths for all days in 2022</span></span>
-<span><span class="va">days</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span></span>
-<span><span class="va">file_paths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"../Data/Tankerkoenig/stations/%s-stations.csv"</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span><span class="op">(</span><span class="va">days</span>, <span class="st">"%Y/%m/%Y-%m-%d"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">days</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span></span>
+<span><span class="va">file_paths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"../../Data/Tankerkoenig/stations/%s-stations.csv"</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span><span class="op">(</span><span class="va">days</span>, <span class="st">"%Y/%m/%Y-%m-%d"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
 <span></span>
 <span><span class="co"># Use lapply to read all files into a list of data.tables</span></span>
 <span><span class="va">data_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_along</a></span><span class="op">(</span><span class="va">file_paths</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
@@ -540,7 +623,7 @@ div.csl-indent {
 <li><p><code>openingtimes_json</code></p></li>
 </ul>
 <div class="cell">
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># omit the variables above</span></span>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># omit the variables above</span></span>
 <span><span class="va">df_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"street"</span>, <span class="st">"house_number"</span>, <span class="st">"first_active"</span>, <span class="st">"openingtimes_json"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># check the structure of the data</span></span>
@@ -560,8 +643,8 @@ div.csl-indent {
 </div>
 <p>Now let’s better understand the data and it’s structure. First, I would like to know how many stations are there on the first day of the year, then I would like to know how many stations were there on the last day of the year.</p>
 <div class="cell">
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Find the station count on day one using the date variable and the uuid:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Find the station count on day one using the date variable and the uuid:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                       uuid     N
                                      &lt;char&gt; &lt;int&gt;
@@ -577,22 +660,22 @@ div.csl-indent {
 16478: 292c5218-4398-11ec-8abb-005056a27fa7     1
 16479: f7ac36f9-4397-11ec-8abb-005056a27fa7     1</code></pre>
 </div>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Count of unique stations on the first day of the year</span></span>
-<span><span class="va">stations_day1</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">.N</span><span class="op">]</span></span>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Count of unique stations on the first day of the year</span></span>
+<span><span class="va">stations_day1</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">.N</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Count of unique stations on the last day of the year</span></span>
-<span><span class="va">stations_day_last</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">.N</span><span class="op">]</span></span>
+<span><span class="va">stations_day_last</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">uuid</span><span class="op">]</span><span class="op">[</span>, <span class="va">.N</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Print results</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Number of stations on the first day of the year:"</span>, <span class="va">stations_day1</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Number of stations on the first day of the year: 16479 </code></pre>
 </div>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Number of stations on the last day of the year:"</span>, <span class="va">stations_day_last</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Number of stations on the last day of the year:"</span>, <span class="va">stations_day_last</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Number of stations on the last day of the year: 16776 </code></pre>
 </div>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate total difference:</span></span>
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate total difference:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Total difference in stations: +"</span>, <span class="va">stations_day_last</span> <span class="op">-</span> <span class="va">stations_day1</span>, <span class="st">"\n"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Total difference in stations: + 297 </code></pre>
@@ -600,9 +683,9 @@ div.csl-indent {
 </div>
 <p>After this, I would even like to know more about the fluctuations in the number of stations over the year, to test the argument that stations (and also competition) is relevantly constant over time. This can only be the case, if there are not many fluctuations. Therefore, I calculate the number of stations for every day in the year 2022 and plot the results using ggplot2.</p>
 <div class="cell">
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate the number of unique stations per day</span></span>
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate the number of unique stations per day</span></span>
 <span><span class="va">stations_over_year</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
-<span>  <span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op">&lt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, </span>
+<span>  <span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op">&lt;=</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>, </span>
 <span>  <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, </span>
 <span>  by <span class="op">=</span> <span class="va">date</span></span>
 <span><span class="op">]</span></span>
@@ -625,15 +708,15 @@ div.csl-indent {
 </figure>
 </div>
 </div>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># let's add dashed lines at the beginning of the year and the end of the year and scale the plot a bit differently</span></span>
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># let's add dashed lines at the beginning of the year and the end of the year and scale the plot a bit differently</span></span>
 <span></span>
 <span><span class="co"># Add dashed lines and adjust the y-axis scale</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">stations_over_year</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">num_stations</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-01-01"</span><span class="op">)</span>,</span>
 <span>             linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
 <span>             color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-12-31"</span><span class="op">)</span>,</span>
 <span>             linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
 <span>             color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_y_continuous</a></span><span class="op">(</span></span>
@@ -658,12 +741,12 @@ div.csl-indent {
 </div>
 <p>How many brands are there in the data set? How are their numbers distributed?</p>
 <div class="cell">
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Count the number of unique brands in the data</span></span>
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Count the number of unique brands in the data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">df_stations</span><span class="op">$</span><span class="va">brand</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1077</code></pre>
 </div>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Distribution of the brands:</span></span>
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Distribution of the brands:</span></span>
 <span><span class="va">df_stations</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">N</span><span class="op">)</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                              brand      N
@@ -680,7 +763,7 @@ div.csl-indent {
 1076:         Tankstelle Nordgarage      1
 1077:                     Sb-Tanken      1</code></pre>
 </div>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Identify the top 10 brands based on the total observations and save them in a variable</span></span>
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Identify the top 10 brands based on the total observations and save them in a variable</span></span>
 <span><span class="va">top_brands</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">N</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="va">brand</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Calculate the number of unique stations (UUIDs) for each top brand</span></span>
@@ -709,7 +792,7 @@ div.csl-indent {
 </div>
 <p>Here it can be seen that the third most common brand is simply shown an empty string in the variable <code>brand</code>, implying that there are 1193 stations that are not owned by a brand. In what follows, I assign these stations the brand name “No Brand”. Furthermore, I repeat the steps from above searching for the top 11 brands, to identify the actual top 10 brands (No Brand excluded).</p>
 <div class="cell">
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Assign the stations in with an empty brand name the brand name "No Brand"</span></span>
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Assign the stations in with an empty brand name the brand name "No Brand"</span></span>
 <span><span class="co"># currently there is simply an empty string in the variable brand</span></span>
 <span><span class="va">df_stations</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">""</span>, <span class="va">brand</span> <span class="op">:=</span> <span class="st">"No Brand"</span><span class="op">]</span></span>
 <span></span>
@@ -718,7 +801,7 @@ div.csl-indent {
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1077</code></pre>
 </div>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Identify the top 11 brands based on the total observations and save them in a variable</span></span>
+<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Identify the top 11 brands based on the total observations and save them in a variable</span></span>
 <span><span class="va">top_brands</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">N</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">11</span>, <span class="va">brand</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Calculate the number of unique stations (UUIDs) for each top brand</span></span>
@@ -748,7 +831,7 @@ div.csl-indent {
 </div>
 <p>Now, how do the fluctuations of station counts look across the top brand? Are there any brands that actively whiden their market share in terms of stations?</p>
 <div class="cell">
-<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate daily unique station counts for top 10 brands</span></span>
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate daily unique station counts for top 10 brands</span></span>
 <span><span class="va">brand_station_trends</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
 <span>  <span class="va">brand</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">top_brands</span>, </span>
 <span>  <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, </span>
@@ -777,53 +860,53 @@ div.csl-indent {
 </div>
 <p>What’s up with this peak of stations for the brand “No Brand” in the middle of the year? Let’s find out:</p>
 <div class="cell">
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Find the date of the peak for the brand "No Brand"</span></span>
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Find the date of the peak for the brand "No Brand"</span></span>
 <span><span class="va">df_stations</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">date</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">num_stations</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         date num_stations
        &lt;Date&gt;        &lt;int&gt;
 1: 2022-05-25         1131</code></pre>
 </div>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># subset the count data for all stations of the brand "No Brand" over the year</span></span>
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># subset the count data for all stations of the brand "No Brand" over the year</span></span>
 <span><span class="va">no_brand_stations</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu">.</span><span class="op">(</span>num_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">date</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># The count of stations is relatively stable, exept for the dates 2022-05-25 and 2022-05-26. Why is this?</span></span>
 <span></span>
 <span><span class="co"># create a data.table with all observations of df_stations for the dates 2022-05-25 and 2022-05-26</span></span>
-<span><span class="va">df_05_25_05_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-25"</span>, <span class="st">"2022-05-26"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_25_05_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-25"</span>, <span class="st">"2022-05-26"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># Are the number of observation in total higher on these two days then the days around them?</span></span>
 <span></span>
 <span><span class="co"># The two weird candidates</span></span>
-<span><span class="va">df_05_25</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-25"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">df_05_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-26"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_25</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-25"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-26"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># The day before and after</span></span>
-<span><span class="va">df_05_24</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-24"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">df_05_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_24</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-24"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Count the number of observations for each day</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_24</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 16594</code></pre>
 </div>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_25</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_25</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 16610</code></pre>
 </div>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_26</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_26</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 16610</code></pre>
 </div>
-<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_27</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">df_05_27</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 16610</code></pre>
 </div>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># How can this be</span></span>
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># How can this be</span></span>
 <span></span>
 <span><span class="co"># Compare 2022-05-26 with 2022-05-27</span></span>
-<span><span class="va">df_05_26_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-26"</span>, <span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">df_05_26_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-26"</span>, <span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># count the number of "no brand" stations for each day</span></span>
 <span><span class="va">df_05_26_27</span><span class="op">[</span><span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">date</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -833,11 +916,11 @@ div.csl-indent {
 1: 2022-05-26  1131
 2: 2022-05-27   675</code></pre>
 </div>
-<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># If the Number of observations for both days are the same and one day prior there where more stations that are assigned to "no brand", then it means that some stations are actually of a brand and it is not recorded in the data. This can be traced back later on using the uuid. But first, I need to identify the stations that are assigned to "no brand" on 2022-05-26 disappear from that brand assignment on the next day:</span></span>
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># If the Number of observations for both days are the same and one day prior there where more stations that are assigned to "no brand", then it means that some stations are actually of a brand and it is not recorded in the data. This can be traced back later on using the uuid. But first, I need to identify the stations that are assigned to "no brand" on 2022-05-26 disappear from that brand assignment on the next day:</span></span>
 <span></span>
 <span><span class="co"># Extract the UUIDs of "No Brand" stations for both days</span></span>
-<span><span class="va">no_brand_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-26"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">no_brand_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">no_brand_26</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-26"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">no_brand_27</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">brand</span> <span class="op">==</span> <span class="st">"No Brand"</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">uuid</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Find stations in "No Brand" on 2022-05-26 but not on 2022-05-27</span></span>
 <span><span class="va">disappeared_stations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html">setdiff</a></span><span class="op">(</span><span class="va">no_brand_26</span>, <span class="va">no_brand_27</span><span class="op">)</span></span>
@@ -846,12 +929,12 @@ div.csl-indent {
 <span></span>
 <span><span class="co"># Extract data for these stations for both days to investigate further</span></span>
 <span><span class="va">disappeared_data</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span></span>
-<span>  <span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">disappeared_stations</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-26"</span>, <span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">disappeared_stations</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2022-05-26"</span>, <span class="st">"2022-05-27"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">]</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># Check brand assignment for these stations on 2022-05-27</span></span>
-<span><span class="va">Stations_that_changed</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">disappeared_stations</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span>, <span class="fu">.</span><span class="op">(</span><span class="va">uuid</span>, <span class="va">brand</span>, <span class="va">city</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">Stations_that_changed</span> <span class="op">&lt;-</span> <span class="va">df_stations</span><span class="op">[</span><span class="va">uuid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">disappeared_stations</span> <span class="op">&amp;</span> <span class="va">date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html">as.Date</a></span><span class="op">(</span><span class="st">"2022-05-27"</span><span class="op">)</span>, <span class="fu">.</span><span class="op">(</span><span class="va">uuid</span>, <span class="va">brand</span>, <span class="va">city</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># give counts of the brands in Stations_that_changed</span></span>
 <span><span class="va">Stations_that_changed</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="va">brand</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -864,7 +947,7 @@ div.csl-indent {
 4:         GO    15
 5: Supermarkt     1</code></pre>
 </div>
-<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># show cities that were affected of the probable data error</span></span>
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># show cities that were affected of the probable data error</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">Stations_that_changed</span><span class="op">$</span><span class="va">city</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  [1] "GÃ¼strow"                    "GrÃ¶nwohld"                 
@@ -1048,103 +1131,215 @@ div.csl-indent {
 [357] "TangermÃ¼nde"                "Marl"                       
 [359] "Osterode"                    "Schlangen"                  </code></pre>
 </div>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># There seems to be no pattern, at least not directly</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># There seems to be no pattern, at least not directly</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>A short assessment does not show any pattern to why there are some stations that are assigned to “No Brand” on 2022-05-26 and are assigned to a brand on 2022-05-27. It is likely an error in the raw data. Further research could asses this in more detail, plotting a map of the stations that are affected, maybe revealing any spatial patterns. This is however not important for the further assessment of my research question and can therefore be disregarded.</p>
 <div class="cell">
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># clear the environment except raw data df</span></span>
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># clear the environment except raw data df</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ls.html">ls</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"df_stations"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Save the stations data to later merge it with price data</p>
+<div class="cell">
+<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># save the data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fwrite.html">fwrite</a></span><span class="op">(</span><span class="va">df_stations</span>, <span class="st">"../../Data/Tankerkoenig/stations/2022/preprocessed/stations_2022.csv.gz"</span>,</span>
+<span>       row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section></section></section><section id="prix-des-carburants-en-france" class="level2"><h2 class="anchored" data-anchor-id="prix-des-carburants-en-france">Prix des carburants en France</h2>
-<section id="small-working-example-1" class="level3"><h3 class="anchored" data-anchor-id="small-working-example-1">Small Working Example</h3>
-<section id="loading-data-1" class="level4"><h4 class="anchored" data-anchor-id="loading-data-1">Loading Data</h4>
+<p>In this Diff-in-Diff Appraoch, France fuel stations are used as a control group. The Data are gathered from (LINK). The data are stored in an <code>.xml</code> file. In what follows, this file will be read and transformed into a format, so it can be handled in R. To load and transform the data, the <code>xml2</code> and <code>XML</code> packages are loaded.</p>
 <div class="cell">
-<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># getwd()</span></span>
-<span><span class="co"># # load the data</span></span>
-<span><span class="co"># df_FRA &lt;- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.csv")</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># df_FRA2 &lt;- fread("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v3.csv")</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # library(jsonlite)</span></span>
-<span><span class="co"># json_data &lt;- fromJSON("../Data/Prix-des-carburants/prix-des-carburants-en-france-flux-instantane-v2.json", flatten = TRUE)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># str(json_data)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># dt &lt;- as.data.table(json_data)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># str(dt)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">t0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Record the start time to measure how long the operation takes.</span></span>
+<span></span>
+<span><span class="co"># read the data using XML, parse it and convert it to a list</span></span>
+<span><span class="va">xml_data_list</span> <span class="op">&lt;-</span> <span class="st">"../../Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml"</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">XML</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/XML/man/xmlTreeParse.html">xmlParse</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">XML</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/XML/man/xmlToList.html">xmlToList</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Record the end time to measure how long the operation took.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">t1</span> <span class="op">-</span> <span class="va">t0</span><span class="op">)</span>    <span class="co"># Calculate and print the elapsed time for the operation.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Time difference of 1.842075 mins</code></pre>
 </div>
-</section><section id="cleaning-data" class="level4"><h4 class="anchored" data-anchor-id="cleaning-data">Cleaning Data</h4>
-<div class="cell">
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># give a list of the variable names</span></span>
-<span><span class="co"># names(df_FRA)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Aim: Clean rename the colums to English </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Convert the data frame to a data.table for efficiency</span></span>
-<span><span class="co"># setDT(df_FRA)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Rename columns</span></span>
-<span><span class="co"># setnames(df_FRA, </span></span>
-<span><span class="co">#          old = c("id", "latitude", "longitude", "Code postal", "pop", "Adresse", </span></span>
-<span><span class="co">#                  "Ville", "services", "prix", "rupture", "horaires", "geom", </span></span>
-<span><span class="co">#                  "Prix Gazole mis à jour le", "Prix Gazole", </span></span>
-<span><span class="co">#                  "Prix SP95 mis à jour le", "Prix SP95", </span></span>
-<span><span class="co">#                  "Prix E85 mis à jour le", "Prix E85", </span></span>
-<span><span class="co">#                  "Prix GPLc mis à jour le", "Prix GPLc", </span></span>
-<span><span class="co">#                  "Prix E10 mis à jour le", "Prix E10", </span></span>
-<span><span class="co">#                  "Prix SP98 mis à jour le", "Prix SP98", </span></span>
-<span><span class="co">#                  "Début rupture e10 (si temporaire)", "Type rupture e10", </span></span>
-<span><span class="co">#                  "Début rupture sp98 (si temporaire)", "Type rupture sp98", </span></span>
-<span><span class="co">#                  "Début rupture sp95 (si temporaire)", "Type rupture sp95", </span></span>
-<span><span class="co">#                  "Début rupture e85 (si temporaire)", "Type rupture e85", </span></span>
-<span><span class="co">#                  "Début rupture GPLc (si temporaire)", "Type rupture GPLc", </span></span>
-<span><span class="co">#                  "Début rupture gazole (si temporaire)", "Type rupture gazole", </span></span>
-<span><span class="co">#                  "Carburants disponibles", "Carburants indisponibles", </span></span>
-<span><span class="co">#                  "Carburants en rupture temporaire", "Carburants en rupture definitive", </span></span>
-<span><span class="co">#                  "Automate 24-24 (oui/non)", "Services proposés", </span></span>
-<span><span class="co">#                  "Département", "code_departement", "Région", "code_region", </span></span>
-<span><span class="co">#                  "horaires détaillés"), </span></span>
-<span><span class="co">#          new = c("id", "latitude", "longitude", "postal_code", "population", </span></span>
-<span><span class="co">#                  "address", "city", "services", "price", "out_of_stock", </span></span>
-<span><span class="co">#                  "hours", "geometry", "diesel_price_updated_on", "diesel_price", </span></span>
-<span><span class="co">#                  "SP95_price_updated_on", "SP95_price", "E85_price_updated_on", </span></span>
-<span><span class="co">#                  "E85_price", "GPLc_price_updated_on", "GPLc_price", </span></span>
-<span><span class="co">#                  "E10_price_updated_on", "E10_price", "SP98_price_updated_on", </span></span>
-<span><span class="co">#                  "SP98_price", "E10_out_of_stock_start", "E10_out_of_stock_type", </span></span>
-<span><span class="co">#                  "SP98_out_of_stock_start", "SP98_out_of_stock_type", </span></span>
-<span><span class="co">#                  "SP95_out_of_stock_start", "SP95_out_of_stock_type", </span></span>
-<span><span class="co">#                  "E85_out_of_stock_start", "E85_out_of_stock_type", </span></span>
-<span><span class="co">#                  "GPLc_out_of_stock_start", "GPLc_out_of_stock_type", </span></span>
-<span><span class="co">#                  "diesel_out_of_stock_start", "diesel_out_of_stock_type", </span></span>
-<span><span class="co">#                  "available_fuels", "unavailable_fuels", </span></span>
-<span><span class="co">#                  "temporarily_out_of_stock_fuels", "permanently_out_of_stock_fuels", </span></span>
-<span><span class="co">#                  "self_service_24_7", "offered_services", "department", </span></span>
-<span><span class="co">#                  "department_code", "region", "region_code", "detailed_hours"))</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # check the structure of the data</span></span>
-<span><span class="co"># str(df_FRA)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # clear environment </span></span>
-<span><span class="co"># rm(list = ls())</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section></section></section><section id="prix-des-carburants-en-france-xml" class="level2"><h2 class="anchored" data-anchor-id="prix-des-carburants-en-france-xml">Prix des carburants en France XML</h2>
 <div class="cell">
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># XML-Datei einlesen</span></span>
-<span><span class="va">xml_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://xml2.r-lib.org/reference/read_xml.html">read_xml</a></span><span class="op">(</span><span class="st">"../Data/Prix-des-carburants/2022/PrixCarburants_annuel_2022.xml"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># XML-Struktur anzeigen</span></span>
-<span><span class="co"># xml_structure(xml_data)</span></span>
-<span></span>
-<span><span class="co"># XML-Datei in ein Dataframe umwandeln</span></span>
-<span><span class="co"># xml_df &lt;- as_data_frame(xml_data)</span></span>
-<span></span>
-<span><span class="co"># df &lt;- xmlToDataFrame(nodes = getNodeSet(xml_data))</span></span>
-<span></span>
-<span><span class="co"># extract pdv_liste</span></span>
-<span><span class="va">test</span> <span class="op">&lt;-</span> <span class="va">xml_data</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="http://xml2.r-lib.org/reference/xml_find_all.html">xml_find_all</a></span><span class="op">(</span><span class="st">"//pdv_liste/pdv"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Time difference of 2.286308 hours</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9605</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tibble [5,044,596 × 7] (S3: tbl_df/tbl/data.frame)
+ $ fuel_type  : chr [1:5044596] "Gazole" "Gazole" "Gazole" "Gazole" ...
+ $ fuel_id    : chr [1:5044596] "1" "1" "1" "1" ...
+ $ price_date : chr [1:5044596] "2022-01-03T08:44:18" "2022-01-05T10:08:11" "2022-01-10T10:09:08" "2022-01-17T12:34:42" ...
+ $ price_value: num [1:5044596] 1.57 1.56 1.6 1.62 1.62 ...
+ $ station_id : chr [1:5044596] "1000001" "1000001" "1000001" "1000001" ...
+ $ longitude  : num [1:5044596] 5.2 5.2 5.2 5.2 5.2 ...
+ $ latitude   : num [1:5044596] 46.2 46.2 46.2 46.2 46.2 ...</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "/Users/jannesehrhardt/Desktop/Applied_Economics_and_Data_Science/Courses/WiSe_24_25/Applied_Economics/Project/Applied_Economics/Code"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2021-12-31"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2022-12-31"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4289</code></pre>
+</div>
+</div>
+<p>So there are 4289 Observations in the data that are from 2021-12-31. These will not be needed in the analysis and can be omitted.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Classes 'data.table' and 'data.frame':  2793337 obs. of  7 variables:
+ $ fuel_type  : chr  "Gazole" "Gazole" "Gazole" "Gazole" ...
+ $ fuel_id    : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ price_date : IDate, format: "2022-01-03" "2022-01-05" ...
+ $ price_value: num  1.57 1.56 1.6 1.62 1.62 ...
+ $ station_id : int  1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 ...
+ $ longitude  : num  5.2 5.2 5.2 5.2 5.2 ...
+ $ latitude   : num  46.2 46.2 46.2 46.2 46.2 ...
+ - attr(*, ".internal.selfref")=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 8
+  station_id Station_Type fuel_type fuel_id price_date price_value longitude
+       &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;       &lt;int&gt; &lt;IDate&gt;          &lt;dbl&gt;     &lt;dbl&gt;
+1    1000001 Gazole only  Gazole          1 2022-01-03        1.57      5.20
+2    1000001 Gazole only  Gazole          1 2022-01-05        1.56      5.20
+3    1000001 Gazole only  Gazole          1 2022-01-10        1.60      5.20
+4    1000001 Gazole only  Gazole          1 2022-01-17        1.62      5.20
+5    1000001 Gazole only  Gazole          1 2022-01-17        1.62      5.20
+6    1000001 Gazole only  Gazole          1 2022-01-17        1.62      5.20
+7    1000001 Gazole only  Gazole          1 2022-01-21        1.65      5.20
+8    1000001 Gazole only  Gazole          1 2022-01-25        1.64      5.20
+# ℹ 1 more variable: latitude &lt;dbl&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tibble [6,146,600 × 4] (S3: tbl_df/tbl/data.frame)
+ $ station_id  : int [1:6146600] 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 ...
+ $ Station_Type: chr [1:6146600] "Gazole only" "Gazole only" "Gazole only" "Gazole only" ...
+ $ fuel_type   : chr [1:6146600] "Gazole" "Gazole" "Gazole" "Gazole" ...
+ $ date        : Date[1:6146600], format: "2022-01-01" "2022-01-02" ...</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tibble [2,793,337 × 8] (S3: tbl_df/tbl/data.frame)
+ $ station_id  : int [1:2793337] 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 ...
+ $ Station_Type: chr [1:2793337] "Gazole only" "Gazole only" "Gazole only" "Gazole only" ...
+ $ fuel_type   : chr [1:2793337] "Gazole" "Gazole" "Gazole" "Gazole" ...
+ $ fuel_id     : int [1:2793337] 1 1 1 1 1 1 1 1 1 1 ...
+ $ price_date  : IDate[1:2793337], format: "2022-01-03" "2022-01-05" ...
+ $ price_value : num [1:2793337] 1.57 1.56 1.6 1.62 1.62 ...
+ $ longitude   : num [1:2793337] 5.2 5.2 5.2 5.2 5.2 ...
+ $ latitude    : num [1:2793337] 46.2 46.2 46.2 46.2 46.2 ...</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3642513</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6435850</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2793337</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 10
+  station_id Station_Type.x fuel_type date       Station_Type.y fuel_id
+       &lt;int&gt; &lt;chr&gt;          &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;            &lt;int&gt;
+1    1000001 Gazole only    Gazole    2022-01-01 &lt;NA&gt;                NA
+2    1000001 Gazole only    Gazole    2022-01-02 &lt;NA&gt;                NA
+3    1000001 Gazole only    Gazole    2022-01-03 Gazole only          1
+4    1000001 Gazole only    Gazole    2022-01-04 &lt;NA&gt;                NA
+5    1000001 Gazole only    Gazole    2022-01-05 Gazole only          1
+6    1000001 Gazole only    Gazole    2022-01-06 &lt;NA&gt;                NA
+7    1000001 Gazole only    Gazole    2022-01-07 &lt;NA&gt;                NA
+8    1000001 Gazole only    Gazole    2022-01-08 &lt;NA&gt;                NA
+# ℹ 4 more variables: price_date &lt;IDate&gt;, price_value &lt;dbl&gt;, longitude &lt;dbl&gt;,
+#   latitude &lt;dbl&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 186484</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "station_id"     "Station_Type.x" "fuel_type"      "date"          
+ [5] "Station_Type.y" "fuel_id"        "price_date"     "price_value"   
+ [9] "longitude"      "latitude"      </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 7
+  station_id fuel_type date       price_date price_value longitude latitude
+       &lt;int&gt; &lt;chr&gt;     &lt;date&gt;     &lt;IDate&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1    1000001 Gazole    2022-01-01 NA               NA        NA        NA  
+2    1000001 Gazole    2022-01-02 NA               NA        NA        NA  
+3    1000001 Gazole    2022-01-03 2022-01-03        1.57      5.20     46.2
+4    1000001 Gazole    2022-01-04 NA                1.57     NA        NA  
+5    1000001 Gazole    2022-01-05 2022-01-05        1.56      5.20     46.2
+6    1000001 Gazole    2022-01-06 NA                1.56     NA        NA  
+7    1000001 Gazole    2022-01-07 NA                1.56     NA        NA  
+8    1000001 Gazole    2022-01-08 NA                1.56     NA        NA  </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 7
+  station_id fuel_type date       price_date price_value longitude latitude
+       &lt;int&gt; &lt;chr&gt;     &lt;date&gt;     &lt;IDate&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1    1000001 Gazole    2022-01-01 NA                1.57     NA        NA  
+2    1000001 Gazole    2022-01-02 NA                1.57     NA        NA  
+3    1000001 Gazole    2022-01-03 2022-01-03        1.57      5.20     46.2
+4    1000001 Gazole    2022-01-04 NA                1.57     NA        NA  
+5    1000001 Gazole    2022-01-05 2022-01-05        1.56      5.20     46.2
+6    1000001 Gazole    2022-01-06 NA                1.56     NA        NA  
+7    1000001 Gazole    2022-01-07 NA                1.56     NA        NA  
+8    1000001 Gazole    2022-01-08 NA                1.56     NA        NA  </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tibble [6,435,850 × 6] (S3: tbl_df/tbl/data.frame)
+ $ station_id : int [1:6435850] 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 ...
+ $ fuel_type  : chr [1:6435850] "Gazole" "Gazole" "Gazole" "Gazole" ...
+ $ date       : Date[1:6435850], format: "2022-01-01" "2022-01-02" ...
+ $ price_value: num [1:6435850] 1.57 1.57 1.57 1.57 1.56 ...
+ $ longitude  : num [1:6435850] 5.2 5.2 5.2 5.2 5.2 ...
+ $ latitude   : num [1:6435850] 46.2 46.2 46.2 46.2 46.2 ...</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classes 'data.table' and 'data.frame':  6435850 obs. of  6 variables:
+ $ station_id : int  1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 1000001 ...
+ $ fuel_type  : chr  "Gazole" "Gazole" "Gazole" "Gazole" ...
+ $ date       : Date, format: "2022-01-01" "2022-01-02" ...
+ $ price_value: num  1.57 1.57 1.57 1.57 1.56 ...
+ $ longitude  : num  5.2 5.2 5.2 5.2 5.2 ...
+ $ latitude   : num  46.2 46.2 46.2 46.2 46.2 ...
+ - attr(*, ".internal.selfref")=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="Data_Prep_files/figure-html/impute_missing_days3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "/Users/jannesehrhardt/Desktop/Applied_Economics_and_Data_Science/Courses/WiSe_24_25/Applied_Economics/Project/Applied_Economics/Code"</code></pre>
+</div>
 </div>
 
 </section><div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
