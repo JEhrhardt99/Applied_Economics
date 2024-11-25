@@ -1,4 +1,4 @@
-\section{Section 2}
+\section{Methodology}
 
 
 
@@ -33,7 +33,7 @@ Following \textcite{Frondel2024}
 
 
 
-\begin{frame}{Model}
+\begin{frame}{Baseline Model Intro}
 
 \vspace{-0.7cm}
 
@@ -41,23 +41,69 @@ Following \textcite{Frondel2024}
 
 \begin{equation}
 \begin{aligned}
-\label{eq:Base_DiD}
+\label{eq:Base_DiD1}
 p_{it} &= \beta \cdot FTD_{t} \times GER_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it} \\
 &= \beta \cdot Treated_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it}
 \end{aligned}
 \end{equation}
 
-Following \textcite{Frondel2024}
+\begin{tiny}
+    Following \textcite{Frondel2024}
+\end{tiny}
+
+\end{block}
+
+\begin{outline}
+    \1 $FTD_{t}$: Dummy for treatment period
+    \1 $GER_{i}$: Dummy for treatment group
+    \1 $\gamma_{i}$: Station fixed effects
+    \1 $\tau_{t}$: Time (or day) fixed effects
+    \1 $\epsilon$: Idiosyncratic error term
+\end{outline}
+
+
+
+
+
+
+\end{frame}
+
+
+
+
+% ========================================================
+
+
+
+
+
+\begin{frame}{Baseline Model}
+
+\vspace{-0.7cm}
+
+\begin{block}{Baseline Model}
+
+\begin{equation}
+\begin{aligned}
+\label{eq:Base_DiD2}
+p_{it} &= \beta \cdot FTD_{t} \times GER_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it} \\
+&= \beta \cdot Treated_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it}
+\end{aligned}
+\end{equation}
+
+\begin{tiny}
+Following \textcite{Frondel2024}    
+\end{tiny}
 
 \end{block}
 
 
 
-\begin{itemize}
-    \item FE clustered at the group level
-    \item Accounts for errors that are correlated within group over time
-    \item would be overconfident (i.e., too small) otherwise
-\end{itemize}
+\begin{outline}
+    \1 FE clustered at the group level (\textit{treatment} or \textit{control})
+    \2 Accounts for errors that are correlated within group over time
+    \2 would be overconfident (i.e., too small) otherwise
+\end{outline}
 
 \begin{center}
 (\cite{Huntington2022})   
@@ -70,14 +116,85 @@ Following \textcite{Frondel2024}
 
 
 
+
+
+
 % ========================================================
 
 
 
 
-\begin{frame}{Model 2}
+
+\begin{frame}{Baseline Model + Competition Metric}
+
+\vspace{-0.9cm}
+
+\begin{block}{Baseline Model}
+
+\small
+\vspace{-0.4cm}
+\begin{equation}
+\begin{aligned}
+\label{eq:Base_DiD3}
+p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it} 
+\end{aligned}
+\end{equation}
+
+\begin{tiny}
+Following \textcite{Frondel2024}    
+\end{tiny}
+
+\end{block}
 
 
+
+\begin{block}{Baseline Model + Own Metric}
+
+\small
+\vspace{-0.6cm}
+\begin{equation}
+\begin{aligned}
+\label{eq:Base_DiD4}
+p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \delta \cdot (Comp_{i} \cdot FTD_{t} \times GER_{i}) + \gamma_{i} + \tau_{t} + \epsilon_{it} 
+\end{aligned}
+\end{equation}
+
+\vspace{-0.3cm}
+\begin{tiny}
+    Following own approach
+\end{tiny}
+
+
+\end{block}
+
+\vspace{-0.3cm}
+
+\begin{outline}
+\small
+    \1 $Comp_{i}$: Nr. of Stations in a 5km radios of station $i$
+    \1 $\beta$: \textcolor{BrickRed}{?}Treatment effect for a station with $Comp_{i} = 0$\textcolor{BrickRed}{?}
+    \1 $\delta$: \textcolor{BrickRed}{?}The average impact of competition on the treatment effect ($\beta$)\textcolor{BrickRed}{?}
+    \1 \textcolor{BrickRed}{?}Play around with log specifications\textcolor{BrickRed}{?}
+\end{outline}
+
+
+\end{frame}
+
+
+
+
+
+
+
+% ========================================================
+
+
+
+
+\begin{frame}{Heterogeneity over Time}
+
+
+\vspace{-1.2cm}
 
 
 \begin{block}{Differential Pass-Through over Time}
@@ -87,10 +204,18 @@ Following \textcite{Frondel2024}
 p_{it} = \sum_{t=1}^{T} \beta \cdot Day_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
 \end{equation}
 
-Following \textcite{Frondel2024}
+\begin{tiny}
+    Following \textcite{Frondel2024}
+\end{tiny}
+
 
 \end{block}
 
+\pause
+
+According to \textcite{Huntington2022}, what is actually estimated is $p_{it} = \sum_{t=-59}^{90} \beta \cdot Day_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}$ with $\beta_{-59}$ … until $\beta_{90}$ and $\beta_{0}$ (Coefficient of the interaction on the day before the treatment - 2022-05-31) \pause
+
+However, $\beta_{-59}$ up to $\beta_{-1}$ are assumed to be insignificant \textbf{and} close to 0 (also a test for parallel trends). 
 
     
 \end{frame}
@@ -104,17 +229,136 @@ Following \textcite{Frondel2024}
 
 
 
-\begin{frame}{Model 2}
+\begin{frame}
 
 
-We can do that! Difference-in-differences can be modified just a bit to allow the effect to differ in each time period. In other words, we can have dynamic treatment effects. This lets you see things like the effect taking a while to work, or fading out.
+\enquote{We can do that! Difference-in-differences can be modified just a bit to allow the effect to differ in each time period. In other words, we can have dynamic treatment effects. This lets you see things like the effect taking a while to work, or fading out.} (\cite{Huntington2022}). \newline
 
-While more broadly used, application of this method often refers to \textcite{Autor2001}
+\enquote{While more broadly used, application of this method often refers to \textcite{Autor2001}} (\cite{Huntington2022}).
 
 
     
 \end{frame}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 % ========================================================
 
+
+
+
+
+\begin{frame}{Own Extension}
+
+\vspace{-1.cm}
+
+\begin{block}{Differential Pass-Through over Time with Competition}
+
+\small
+
+\vspace{-0.3cm}
+
+% Resize the equation to fit within the block width
+\begin{equation}
+\resizebox{\textwidth}{!}{
+$\displaystyle
+p_{it} = \sum_{t=-59}^{90} (\beta_{t} \cdot Day_{t} \times GER_{i} + \delta_{i} \cdot Day_{t} \times GER_{i} \times Comp_{i}) + \gamma_{i} + \tau_{t} + \epsilon_{it}
+$}
+\label{eq:Diff_DiD4}
+\end{equation}
+
+
+\vspace{-0.2cm}
+
+\begin{center}
+    or
+\end{center}
+
+\vspace{-0.2cm}
+
+% Resize the second equation
+\begin{equation}
+\resizebox{\textwidth}{!}{
+$\displaystyle
+p_{it} = \sum_{t=-59}^{90} \beta_{t} \cdot Day_{t} \times GER_{i} + \sum_{t=-59}^{90} \delta_{t} \cdot Day_{t} \times GER_{i} \times Comp_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
+$}
+\label{eq:Diff_DiD5}
+\end{equation}
+
+\vspace{0.2cm}
+
+\begin{tiny}
+    Following own approach
+\end{tiny}
+
+\end{block}
+
+\end{frame}
+
+
+
+
+
+% ========================================================
+
+
+
+\begin{frame}{Frame Title}
+
+%     Warum e10 und nicht e5?
+
+
+% -> Gruppierten Datensatz nach ​
+
+
+% Für Stationid erzeugen:
+%     Anzahl Beobachtungen für E10 insgesamt; dann können Stationen rausfgefiltert werden, die bbspw. weniger als 50/100/200 Beobachtungen haben. Ist das nur ein kleiner Anteil? Dann unkritisch.
+    
+    
+    
+    
+%     Erstes Datum 2021-12-31 mitnehmen
+    
+%     df <- df |>
+%     tidyr::fill(price, direction = "down")
+
+
+
+
+
+
+
+
+
+% -> Gruppierten Datensatz nach ​
+
+
+% Für Stationid erzeugen:
+%     Anzahl Beobachtungen für E10 insgesamt; dann können Stationen rausfgefiltert werden, die bbspw. weniger als 50/100/200 Beobachtungen haben. Ist das nur ein kleiner Anteil? Dann unkritisch.
+    
+    
+    
+    
+%     Erstes Datum 2021-12-31 mitnehmen
+    
+%     https://www.rdocumentation.org/packages/zoo/versions/1.8-12/topics/na.locf
+    
+%     maxgap z.B. auf 7 setzen
+    
+    
+%     Millionen von Beobachtungen im data.frame, die vor Angst schreien und dann verstummen. 
+
+    
+    
+\end{frame}

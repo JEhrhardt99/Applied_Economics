@@ -672,8 +672,6 @@ ggplot(brand_station_trends, aes(x = date, y = num_stations, color = brand)) +
 
 ```
 
-
-
 What's up with this peak of stations for the brand "No Brand" in the middle of the year? Let's find out:
 
 ```{r}
@@ -770,7 +768,6 @@ Save the stations data to later merge it with price data
 fwrite(df_stations, "../../Data/Tankerkoenig/stations/2022/preprocessed/stations_2022.csv.gz",
        row.names = FALSE)
 ```
-
 
 ## Prix des carburants en France
 
