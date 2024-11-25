@@ -1010,10 +1010,9 @@ head(all_prices_new, 8)
 
 # Next Things to be adressed:
 
-# The observations in the data are recorded in dfferent intervalls. So sometimes, there are multiple observations for the same day for one station and sometimes there are only a few observations with days missing in between. I need to impute these missing days by the value of the day before. In a first step, I only want to create a new variable called 'date', that is simply every day in the year 2022 for every station in the data set. However, for Stations of the category 'Both', this needs to happen twice, since the data is still in the long format and for those stations, every fuel type has its own 365 observations inside the year. So the new variable will prolong the data set, since it has every day in the yeare for every station, while this is currently not the way the data is structured
+# The observations in the data are recorded in dfferent intervalls. So sometimes, there are multiple observations for the same day for one station and sometimes there are only a few observations with days missing in between. I need to impute these missing days by the value of the day before. In a first step, I only want to create a new variable called 'date', that is simply every day in the year 2022 for every station in the data set. However, for Stations of the category 'Both', this needs to happen twice, since the data is still in the long format and for those stations, every fuel type has its own 365 observations inside the year. So the new variable will prolong the data set, since it has every day in the year for every station, while this is currently not the way the data is structured
 
 # This will be done now:
-
 
 # Create a sequence of dates for 2022
 all_dates <- seq(as.Date("2022-01-01"), as.Date("2022-12-31"), by = "day")
@@ -1127,7 +1126,6 @@ wide_prices <- dcast(
   value.var = "price_value",
   fun.aggregate = mean # Use mean to aggregate duplicate entries, automatically produces daily averages per station
 )
-
 
 
 # calculate the average fuel price for gazole for each day in france: So I have to calculate the mean of all station prices for each day:
