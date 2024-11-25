@@ -40,11 +40,42 @@ Following \textcite{Frondel2024}
 \begin{block}{Baseline Model}
 
 \begin{equation}
+\begin{aligned}
 \label{eq:Base_DiD}
-p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
+p_{it} &= \beta \cdot FTD_{t} \times GER_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it} \\
+&= \beta \cdot Treated_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it}
+\end{aligned}
 \end{equation}
 
+Following \textcite{Frondel2024}
+
 \end{block}
+
+
+
+\begin{itemize}
+    \item FE clustered at the group level
+    \item Accounts for errors that are correlated within group over time
+    \item would be overconfident (i.e., too small) otherwise
+\end{itemize}
+
+\begin{center}
+(\cite{Huntington2022})   
+\end{center}
+
+
+
+
+\end{frame}
+
+
+
+% ========================================================
+
+
+
+
+\begin{frame}{Model 2}
 
 
 
@@ -56,15 +87,34 @@ p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{
 p_{it} = \sum_{t=1}^{T} \beta \cdot Day_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
 \end{equation}
 
+Following \textcite{Frondel2024}
+
 \end{block}
 
 
-
-
-Following \textcite{Frondel2024}
-
-
-
+    
 \end{frame}
 
+
+
+
+% ========================================================
+
+
+
+
+
+\begin{frame}{Model 2}
+
+
+We can do that! Difference-in-differences can be modified just a bit to allow the effect to differ in each time period. In other words, we can have dynamic treatment effects. This lets you see things like the effect taking a while to work, or fading out.
+
+While more broadly used, application of this method often refers to \textcite{Autor2001}
+
+
+    
+\end{frame}
+
+
+% ========================================================
 
