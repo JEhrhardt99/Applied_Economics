@@ -1,0 +1,77 @@
+
+%------- Set the documentclass 
+\documentclass[xcolor=dvipsnames, english]{beamer} 
+% dvipsnames gives more built-in colors
+
+%------- load packages (many more packeges in the .sty "UCAS")
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{mathpazo}
+\usepackage{multicol}
+\usepackage{adjustbox}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage[babel]{csquotes}
+\usepackage[english]{babel} 
+\usepackage{outlines}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{UCAS} 
+
+
+%------------------ Start of the document
+
+\begin{document}
+
+%------------------ Create the titlepage
+
+\maketitle
+
+%------------------ craete the table of contents (with(-out) UOL-Logo)
+
+\begin{frame}
+    % \begin{minipage}[t][0.6\textheight]{0.6\textwidth}
+    %     \vspace{0pt}
+        \tableofcontents[sectionstyle=show,subsectionstyle=hide/shaded/hide,subsubsectionstyle=hide/shaded/hide]
+    % \end{minipage}
+    % \begin{minipage}[t]{0.39\textwidth}
+    %     \vspace{1,5cm}
+    %     \hspace{-2,5cm}
+    %     \includegraphics[width=1.5\textwidth]{Graphs/uniol_4c.pdf}
+    % \end{minipage}
+\end{frame}
+
+%------------------ Add the single sections and subsections 
+
+\input{Content/Section1}
+\input{Content/Section2}
+\input{Content/Section3}
+\input{Content/Section4}
+\input{Content/Section5}
+% \input{Content/Section6}
+
+
+    
+% start appendix 
+
+\appendix
+
+
+%------------------ Create the bibliography
+
+\begin{frame}[allowframebreaks]{References}
+
+\printbibliography
+
+\end{frame}
+
+%------ ALTERNATIVE: % \begin{frame}[allowframebreaks, noframenumbering]{References}
+
+
+% incorporate the backupslides
+
+\input{Backup_Slides/backup.tex}
+
+
+\end{document}

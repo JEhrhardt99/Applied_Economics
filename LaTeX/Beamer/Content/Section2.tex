@@ -1,0 +1,70 @@
+\section{Section 2}
+
+
+
+
+
+
+\begin{frame}{Model}
+
+
+\vspace{-0.7cm}
+
+
+
+\begin{block}{Pass-Through Rate}
+
+\begin{equation}
+\label{eq:Pass_Through_Rate}
+\hat{p} = - \frac{\hat{\beta}}{FTD} 
+\end{equation}
+
+\end{block}
+
+
+
+Following \textcite{Frondel2024}
+
+\end{frame}
+
+
+
+% ========================================================
+
+
+
+\begin{frame}{Model}
+
+\vspace{-0.7cm}
+
+\begin{block}{Baseline Model}
+
+\begin{equation}
+\label{eq:Base_DiD}
+p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
+\end{equation}
+
+\end{block}
+
+
+
+
+\begin{block}{Differential Pass-Through over Time}
+
+\begin{equation}
+\label{eq:Diff_DiD}
+p_{it} = \sum_{t=1}^{T} \beta \cdot Day_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
+\end{equation}
+
+\end{block}
+
+
+
+
+Following \textcite{Frondel2024}
+
+
+
+\end{frame}
+
+

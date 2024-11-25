@@ -1,0 +1,417 @@
+\mode<presentation>
+
+\newif\ifbeamer@secheader
+
+\beamer@secheaderfalse
+
+\ProcessOptionsBeamer
+
+\useoutertheme[footline=authorinstitutetitle,subsection=false]{miniframes}
+ 
+% \useoutertheme[footline=authorinstitutetitle,subsection=false]{smoothbars}
+
+% \setbeamertemplate{headline}{%
+% \begin{beamercolorbox}[colsep=1.5pt]{upper separation line head}
+% \end{beamercolorbox}
+% \begin{beamercolorbox}{section in head/foot}
+%     \vskip2pt\insertsectionnavigationhorizontal{\paperwidth}{}{\hskip0pt plus1filll}\vskip2pt
+% \end{beamercolorbox}%
+% \begin{beamercolorbox}[ht=10pt]{subsection in head/foot}%
+%     \vskip2pt\insertsubsectionnavigationhorizontal{\paperwidth}{}{\hskip0pt plus1filll}\vskip2pt
+% \end{beamercolorbox}%
+% \begin{beamercolorbox}[colsep=1.5pt]{lower separation line head}
+% \end{beamercolorbox}
+% }
+
+%-------- This makes subsections in the top bar
+
+\makeatletter
+\def\sectionentry#1#2#3#4#5{% section number, section title, page
+  \beamer@xpos=0\relax%
+  \beamer@ypos=1\relax%
+  \beamer@ypos@offset=0\relax%
+  \ifnum#5=\c@part%
+  \beamer@section@set@min@width%
+  \box\beamer@sectionbox\hskip1.875ex plus 1fill%
+  \setbox\beamer@sectionbox=
+  \hbox{\def\insertsectionhead{#2}%
+    \def\insertsectionheadnumber{#1}%
+    \def\insertpartheadnumber{#5}%
+    {%
+      \usebeamerfont{section in head/foot}\usebeamercolor[fg]{section in head/foot}%
+      \ifnum\c@section=#1%
+        \hyperlink{Navigation#3}{{\usebeamertemplate{section in head/foot}}}%
+        :~\insertsubsectionhead%
+      \else%
+        \hyperlink{Navigation#3}{{\usebeamertemplate{section in head/foot shaded}}}%
+      \fi}%
+  }%
+  \ht\beamer@sectionbox=1.875ex%
+  \dp\beamer@sectionbox=0.75ex%
+  \fi\ignorespaces} 
+\makeatother
+
+%-------------------  Framenumbering
+
+\makeatletter % [add curpage/total page at the bottom](http://tex.stackexchange.com/questions/100838/beamer-dresden-theme-miniframes-appeareance-and-frame-number-insertion)
+\newcommand{\frameofframes}{of}
+\newcommand{\setframeofframes}[1]{\renewcommand{\frameofframes}{#1}}
+\setbeamertemplate{footline} 
+  {%
+    \begin{beamercolorbox}[colsep=1.5pt]{upper separation line foot}
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[ht=2.5ex,dp=1.125ex,%
+      leftskip=.3cm,rightskip=.3cm plus1fil]{author in head/foot}%
+      \leavevmode{\usebeamerfont{author in head/foot}\insertshortauthor}%
+      \hfill%
+      {\usebeamerfont{institute in head/foot}\usebeamercolor[fg]{institute in head/foot}\insertshortinstitute}%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[ht=2.5ex,dp=1.125ex,%
+      leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}%
+      {\usebeamerfont{title in head/foot}\insertshorttitle}%
+      \hfill%
+      {\usebeamerfont{frame number}\usebeamercolor[fg]{frame number}\insertframenumber~\frameofframes~\inserttotalframenumber}
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[colsep=1.5pt]{lower separation line foot}
+    \end{beamercolorbox}
+  }
+\makeatother
+
+
+% Makes the section circles above in the mini frame
+
+\useinnertheme{circles}
+
+
+
+
+
+
+
+
+
+
+% \setbeamerfont{frametitle}{size=\huge, series=\normalfont}
+% \setbeamercolor{frametitle}{fg=white}
+
+
+
+%\useoutertheme{default}
+%\useinnertheme[shadow=true]{rounded}
+
+
+
+
+
+\xdefinecolor{uolblue}{RGB}{0, 62, 107}
+\xdefinecolor{uolblue2}{RGB}{0, 78, 159}
+\xdefinecolor{uolblue3}{RGB}{0, 171, 217}
+\xdefinecolor{uolblue4}{RGB}{91, 197, 242}
+\xdefinecolor{uolblue5}{RGB}{161, 217, 248}
+
+
+
+
+
+\xdefinecolor{ssm}{RGB}{4, 65, 35}
+\xdefinecolor{ssmlight}{RGB}{211, 233, 206}
+\xdefinecolor{ssmCTA}{RGB}{50, 235, 150}
+
+
+\xdefinecolor{ucas}{RGB}{23, 73, 148}  %RGB#174994
+\setbeamercolor{footline}{bg=uolblue}
+
+% Change the color of the main title:
+\setbeamercolor{title}{bg=uolblue}
+
+% Change the format of the main title:
+% \setbeamerfont{title}{size=\Large, series=\bfseries}
+
+% Change the format of the frametitle:
+\setbeamerfont{frametitle}{size=\Large, series=\normalfont}
+
+% Change the Color of the frametitle:
+\setbeamercolor{frametitle}{bg=uolblue,fg=white}
+
+
+%\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{bibliography item}[text]
+
+% number the figures with cation
+\setbeamertemplate{caption}[numbered]
+% color of the caption
+\setbeamercolor{caption}{fg=black}
+% shape and size of the cation
+\setbeamerfont{caption}{size=\small, series=\sf}
+
+% Change the format of the framesubtitle:
+\setbeamerfont{framesubtitle}{size=\normalfont\tiny}
+\setbeamercolor{framesubtitle}{fg=white}
+
+
+\setbeamercolor{palette primary}{use=structure,fg=white,bg=structure.fg}
+\setbeamercolor{palette secondary}{use=structure,fg=white,bg=structure.fg!75!black}
+\setbeamercolor{palette tertiary}{use=structure,fg=white,bg=structure.fg!50!black}
+\setbeamercolor{palette quaternary}{fg=white,bg=structure.fg!50!black}
+%\setbeamercolor*{sidebar}{use=structure,bg=structure.fg}
+\setbeamercolor{titlelike}{parent=palette primary}
+
+%% try
+\setbeamercolor{block title}{bg=uolblue,fg=white}
+\setbeamercolor*{block title example}{use={normal text,example text},bg=white,fg=uolblue}
+\setbeamercolor{fine separation line}{}
+\setbeamercolor{item projected}{fg=white}
+\setbeamercolor{palette sidebar primary}{use=normal text,fg=normal text.fg}
+\setbeamercolor{palette sidebar quaternary}{use=structure,fg=structure.fg}
+\setbeamercolor{palette sidebar secondary}{use=structure,fg=structure.fg}
+\setbeamercolor{palette sidebar tertiary}{use=normal text,fg=normal text.fg}
+%\setbeamercolor{palette sidebar quaternary}{fg=white}
+\setbeamercolor{section in sidebar}{fg=brown}
+\setbeamercolor{section in sidebar shaded}{fg=grey}
+\setbeamercolor{separation line}{}
+\setbeamercolor{sidebar}{bg=uolblue}
+\setbeamercolor{sidebar}{parent=palette primary}
+\setbeamercolor{structure}{fg=uolblue}
+\setbeamercolor{subsection in sidebar}{fg=brown}
+\setbeamercolor{subsection in sidebar shaded}{fg=grey}
+\AtBeginSection[]{
+	\begin{frame}
+		\tableofcontents[sectionstyle=show/shaded,subsectionstyle=hide/shaded/hide,subsubsectionstyle=hide/shaded/hide]
+	\end{frame}
+}
+\AtBeginSubsection[]{
+	\begin{frame}
+		\tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+	\end{frame}
+}
+
+
+
+
+
+% this changes the default fonts inside equations or similar environments 
+\SetSymbolFont{letters}{normal}{T1}{cmr}{m}{sl}
+\SetSymbolFont{letters}{bold}{T1}{cmr}{b}{sl}
+
+
+
+
+\definecolor{UBCblue}{rgb}{0.1, 0.38, 0.72} % UBC Blue (primary)
+
+\mode
+<all>
+
+
+\usepackage{ragged2e}
+\usepackage{xparse,nameref}
+\usepackage{mathtools}
+\usepackage{eurosym}
+\usepackage{tabularx}
+\usepackage{pdfpages}
+\usepackage{microtype}
+\usepackage{hhline}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{fix-cm}
+\usepackage{wrapfig}
+\usepackage{subcaption}
+\usepackage{appendixnumberbeamer}
+% \usepackage{extarrows}
+
+%------- fonts 
+% \usefonttheme{professionalfonts}
+%alternative
+\usepackage{lmodern}  % Load the Latin Modern font
+\renewcommand*\familydefault{\sfdefault}
+% \usefonttheme{serif}
+
+
+% Set the font to Helvetica
+% \usepackage{helvet}
+% \renewcommand{\familydefault}{\sfdefault}
+
+
+%------- aus dem anderen Template zur Verschönerung der Listings, um LateX Code zu highlighten
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{blue},
+    % emphstyle=\ttfamily\color{red},    % Custom highlighting style
+    % stringstyle=\color{green},
+    % numbers=left, % makes line numbers
+    % numberstyle=\small\color{grey},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+}
+
+
+% \setbeamertemplate{caption}{\raggedright\insertcaption\par}
+
+
+
+%------- beamer theme works in combination with specifikations added in the ucas.sty
+\usetheme{Berlin}
+% \usecolortheme{seahorse}
+
+
+%----- insert UOL-LOGO in the top Line
+\addtobeamertemplate{frametitle}{}{%
+\begin{tikzpicture}[remember picture,overlay]
+\node[anchor=north east,yshift=-13.2pt,xshift=-0.01pt] at (current page.north east) {\includegraphics[height=0.8cm]{Graphs/UOL_Logo_Negativ.png}};
+\end{tikzpicture}}
+
+
+
+\usepackage{eso-pic}
+
+%----- insert ITTP-LOGO in the top Line
+\AddToShipoutPictureFG{
+  \AtPageLowerLeft{
+    \raisebox{\dimexpr\paperheight-9cm}{\hspace{-0.2cm}\includegraphics[width=1cm]{Beamer_Template_Berlin/Graphs/Logo_Small.png}}
+  }
+}
+
+
+%------------- Set up Citing --------------
+
+\usepackage[citestyle=apa, bibstyle=authoryear, sorting=nyt]{biblatex}
+
+\addbibresource{main.bib}
+
+\setbeamertemplate{bibliography item}{\insertbiblabel}
+
+% avoid error about \insertbiblabel being undefined
+\preto{\bibsetup}{\providecommand*{\insertbiblabel{}}}
+
+\renewcommand*{\nameyeardelim}{\addcomma\space}
+\setlength\bibitemsep{1.5\itemsep}
+
+% produce et al.
+\DefineBibliographyStrings{english}{
+   andothers = {{et\,al\adddot}},
+} 
+
+\renewcommand*{\nameyeardelim}{\addcomma\space}
+\setlength\bibitemsep{1.5\itemsep}
+
+% linking full citation
+\DeclareFieldFormat{citehyperref}{%
+    \DeclareFieldAlias{bibhyperref}{noformat}% Avoid nested links
+    \bibhyperref{#1}}
+
+\savebibmacro{cite}
+
+\renewbibmacro*{cite}{%
+    \printtext[citehyperref]{%
+        \restorebibmacro{cite}%
+        \usebibmacro{cite}}}
+
+
+
+% colortheme -> see beamer theme gallary for alternatives (e.g. seahorse)
+
+\usecolortheme[named=uolblue]{structure}
+
+% \usecolortheme[named=RoyalBlue]{structure} % Sample dvipsnames color
+
+
+
+%--------- define the color of different elements
+
+\newcommand\customhypersetup{
+    \hypersetup{
+        colorlinks=true,
+        linkcolor=uolblue3,
+        filecolor=magenta,
+        urlcolor=uolblue4,
+        citecolor=RoyalBlue,
+    }
+}
+\customhypersetup
+
+
+
+%--------- Front Page and general Information
+%--------- in [] comes the information that is in every frame
+
+\title[Fuel Tax Discount in Germany (2022) - Pass-Through]{Fuel Tax Discount in Germany (2022) - Pass-Through}
+
+\subtitle{Beautiful Subtitle}
+
+\date{\today}
+
+\author[Jannes Ehrhardt]{Jannes Ehrhardt,}
+
+\institute[Carl von Ossietzky University of Oldenburg, Department of Economics]{
+Carl von Ossietzky University of Oldenburg \vspace{0.3cm} \\ \textbf{Applied Economics} \\ 
+\vspace{0.2cm}
+\setlength{\leftmargini}{3.5cm}
+\begin{itemize}
+    \item Prof. Dr. Jürgen Bitzer
+    \item Dr. rer. pol. Bernhard Danneman
+    \item Abigail Opokua Asare
+\end{itemize}
+\vspace{-0.2cm}
+}
+
+%----------------------------------------------
+
+
+%----------- Foodnotes---------
+
+\usepackage[marginal]{footmisc}
+
+% you could change \arabic against \fnsymbol for different footnote symbols
+\renewcommand\thefootnote{\textcolor{NavyBlue}{\arabic{footnote}}}
+
+% Länge, Breite und Dicke des Strichs
+\renewcommand{\footnoterule}{
+  \kern -2pt                          
+  \hrule width \textwidth height 0.7pt 
+  \kern 2pt
+  }  
+
+% Abstand der einzelnen Foodnotes
+\setlength{\footnotesep}{2pt}   
+
+% verrückt den text so, dass keine footnotes mehr über zwei seiten brechen. (für beamer weniger relevant als für article)
+\interfootnotelinepenalty=10000  
+
+%\dimen\footins=5cm   % Schränkt die größe der foodnotes pro seite ein
+
+
+%-------------- Design of a problock
+
+\newenvironment<>{problock}[1]{%
+  \begin{actionenv}#2%
+      \def\insertblocktitle{#1}%
+      \par%
+      \mode<presentation>{%
+        \setbeamercolor{block title}{fg=white,bg=BrickRed!99}
+       \setbeamercolor{block body}{fg=black,bg=red!45}
+       \setbeamercolor{itemize item}{fg=red!20!black}
+       \setbeamertemplate{itemize item}[triangle]
+     }%
+      \usebeamertemplate{block begin}}
+    {\par\usebeamertemplate{block end}\end{actionenv}}
+    
+       
+    
+    \newenvironment<>{problock2}[1]{%
+  \begin{actionenv}#2%
+      \def\insertblocktitle{#1}%
+      \par%
+      \mode<presentation>{%
+        \setbeamercolor{block title}{fg=white,bg=OliveGreen!99}
+       \setbeamercolor{block body}{fg=black,bg=YellowGreen!45}
+       \setbeamercolor{itemize item}{fg=green!20!black}
+       \setbeamertemplate{itemize item}[triangle]
+     }%
+      \usebeamertemplate{block begin}}
+    {\par\usebeamertemplate{block end}\end{actionenv}}
+
+
+%----------------------------------------------------------------------
+
+
+
