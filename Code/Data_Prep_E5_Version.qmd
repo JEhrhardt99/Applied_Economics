@@ -226,7 +226,7 @@ The weird observations do not correspond to the same stations at different point
 rm(list = setdiff(ls(), "df"))
 ```
 
-The analysis will only include diesel prices and E10 prices, hence, E5 prices should be omitted early on to save memory.
+The analysis of @Frondel2024 only includes diesel prices and E10 prices. There is no explanation why this is the case. Since E5 presumably has a high market share, I will try to include it as well.
 
 ```{r}
 #| label: ommit_e5
@@ -234,7 +234,7 @@ The analysis will only include diesel prices and E10 prices, hence, E5 prices sh
 #| output: true
 
 # remove the e5 variable using the data.table package
-df <- df[, !"e5"]
+# df <- df[, !"e5"]
 ```
 
 #### Daily Averages per Station
@@ -251,6 +251,7 @@ unique_date <- as.Date(df$date[1],
 # Group by station_uuid to calculate daily averages, and add the extracted unique date as a column
 daily_averages <- df[, .(
   avg_diesel = mean(diesel),
+  avg_e5 = mean(e5),
   avg_e10 = mean(e10)
 ), by = station_uuid][, date_only := unique_date]
 
@@ -361,12 +362,13 @@ while (current_date <= end_date) {
     df <- df %>% filter(diesel >= 0, e10 >= 0, e5 >= 0)
     
     # omit e5
-    df <- df[, !"e5"]
+    # df <- df[, !"e5"]
     
     # Calculate daily averages per station
     unique_date <- as.Date(df$date[1], tz = "Europe/Berlin")
     daily_averages <- df[, .(
       avg_diesel = mean(diesel, na.rm = TRUE),
+      avg_e5 = mean(e5, na.rm = TRUE),
       avg_e10 = mean(e10, na.rm = TRUE)
     ), by = station_uuid][, date_only := unique_date]
     
