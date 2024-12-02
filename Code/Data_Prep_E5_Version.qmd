@@ -1132,7 +1132,19 @@ cat("Proportion of total observations:", nrow(stations_with_na_data_alt) / nrow(
 
 
 
+# how many unique stations are in final data?
+unique(final_data$station_id) %>% length()
 
+# how many would be left if I drop the stations with a 14 day NA streaks?
+unique(final_data$station_id) %>% length() - num_stations_with_na_streak_alt
+
+# I will drop the stations with 14 day NA streaks, since they are only a small proportion of the sample and the data is not reliable for them.
+
+
+# Drop stations with 14-day NA streaks
+
+final_data_var <- final_data %>%
+  filter(!(station_id %in% stations_with_na_streak_alt$station_id))
 
 
 # # Step 1: Calculate rolling variation within a 14-day window
@@ -1197,7 +1209,7 @@ cat("Proportion of total observations:", nrow(stations_with_na_data_alt) / nrow(
 
 
 # Impute missing price values using the previous available price within each station and fuel_type
-final_data_imputed <- final_data %>%
+final_data_imputed <- final_data_var %>%
   group_by(station_id, fuel_type) %>%
   arrange(station_id, fuel_type, date) %>%
   mutate(price_value = zoo::na.locf(price_value, na.rm = FALSE)) %>%

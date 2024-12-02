@@ -5,29 +5,58 @@
 # Load necessary library
 library(data.table)
 
-# Create a small data.table to mimic the structure of 'final_data'
+# Set seed for reproducibility
 set.seed(42)
 
-# Define a small set of station_ids and fuel types
-station_ids <- c(101, 102, 103)
-fuel_types <- c("Gazole", "E10")
-
-# Create a sequence of dates
-dates <- seq(as.Date("2022-01-01"), as.Date("2022-01-10"), by = "day")
-
-# Create the data.table
+# Create a small example data.table to mimic your structure
 final_data_example <- data.table(
-  station_id = rep(station_ids, each = length(dates) * length(fuel_types)),
-  fuel_type = rep(fuel_types, times = length(station_ids) * length(dates)),
-  date = rep(dates, times = length(station_ids) * length(fuel_types)),
-  price_value = c(
-    1.5, 1.4, NA, 1.45, 1.46, 1.48, 1.47, 1.49, 1.5, 1.52,  # Station 101, Gazole
-    1.4, 1.35, NA, 1.42, NA, 1.45, 1.44, 1.46, 1.47, 1.5,    # Station 101, E10
-    1.55, 1.57, NA, 1.56, 1.58, 1.6, NA, 1.63, 1.65, NA,     # Station 102, Gazole
-    1.3, 1.28, 1.29, NA, 1.31, 1.32, NA, 1.34, 1.36, 1.37,    # Station 102, E10
-    1.55, 1.56, 1.58, NA, 1.6, 1.62, NA, 1.65, 1.67, 1.69     # Station 103, Gazole
-  )
+  station_id = c(101, 101, 102, 102, 103, 103, 101, 102, 103),  # 3 stations
+  fuel_type = c("Gazole", "E10", "Gazole", "E10", "Gazole", "E10", "Gazole", "E10", "Gazole"),
+  price_value = c(1.5, NA, 1.6, NA, 1.65, 1.5, 1.55, NA, 1.7),  # Some NAs for missing prices
+  date = as.Date(c("2022-01-01", "2022-01-01", "2022-01-02", "2022-01-02", 
+                   "2022-01-03", "2022-01-03", "2022-01-04", "2022-01-04", 
+                   "2022-01-05")),  # Dates for each observation
+  longitude = rep(c(2.0, 2.1, 2.2), each = 3),  # Longitude
+  latitude = rep(c(48.0, 48.1, 48.2), each = 3)  # Latitude
 )
 
-# View the small dataset
-print(final_data_example)
+final_data_example <- final_data_example %>% 
+  arrange(station_id, fuel_type, date)  # Order by station_id and date
+
+
+
+
+
+
+
+
+# Identify stations with at least 2 consecutive NAs
+stations_with_na_streak_alt <- final_data_example %>%
+  group_by(station_id, fuel_type) %>%
+  arrange(station_id, fuel_type, date) %>%
+  mutate(na_group = cumsum(!is.na(price_value))) %>%  # Create groups of consecutive NAs
+  group_by(station_id, fuel_type, na_group) %>%       # Group by streaks
+  summarize(
+    streak_length = n(),                              # Count streak length
+    is_na_streak = all(is.na(price_value)),           # Confirm streak is all NAs
+    .groups = "drop"
+  ) %>%
+  filter(is_na_streak & streak_length >= 2) %>%      # Filter streaks of 14+ consecutive NAs
+  distinct(station_id, fuel_type)                    # Keep unique station_id and fuel_type combinations
+
+
+
+# Count stations with long NA streaks
+num_stations_with_na_streak_alt <- nrow(stations_with_na_streak_alt)
+
+cat("Number of stations with at least 14 consecutive NAs:", num_stations_with_na_streak_alt, "\n")
+
+# Investigate their contribution to the dataset
+stations_with_na_data_alt <- final_data_example %>%
+  filter(station_id %in% stations_with_na_streak_alt$station_id)
+
+cat("Total observations contributed by affected stations:", nrow(stations_with_na_data_alt), "\n")
+cat("Proportion of total observations:", nrow(stations_with_na_data_alt) / nrow(final_data_example), "\n")
+
+
+
