@@ -963,7 +963,13 @@ all_prices_new <- all_prices_new %>%
 #| echo: false
 #| output: true
 
-# 1. Filterung der relevanten Kraftstoffarten
+# 1. Filter for relevant fuel type
+all_prices_new <- all_prices_new %>%
+  filter(fuel_type %in% c("Gazole", "E10", "E5"))
+
+# The France data does not contain E5, that is why the authors excluded it.
+
+# 1.1. Filter for relevant fuel type
 all_prices_new <- all_prices_new %>%
   filter(fuel_type %in% c("Gazole", "E10"))
 
@@ -983,7 +989,7 @@ sum(is.na(all_prices_new$price_value))
 
 # Things to be adressed:
 
-# Indicate stations that only have of of the two fuel types 'Gazole' or 'E10' like this:
+# Indicate stations that only have one of the two fuel types 'Gazole' or 'E10' like this:
 # new variable: Station_Type = "Gazole only" or "E10 only" or "Both"
 
 
@@ -1049,6 +1055,141 @@ sum(is.na(final_data$price_value)) == nrow(final_data) - nrow(all_prices_new)
 
 
 head(final_data, 8)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Before the missing values can be imputed, the following must be considered. For what ever reason, some station had a few price observations only twice or something like that over the hole year. In such cases, the imputation I made does not make sense, since the prices definitely were not stable across the hole year. The way I did it, I artificially created non-variation among those stations. So, before I impute the values as I did using zoo::na.locf(), I first want to find out how many stations might have no price changes in, say, 2 weeks. If this is only a small number of station, I could simply drop them and go on as I did before. If this number is very large relative to the sample, I might reconsider my analysis fundamentally.
+
+
+
+# Identify stations with at least 14 consecutive NAs
+stations_with_na_streak <- final_data %>%
+  group_by(station_id, fuel_type) %>%
+  arrange(station_id, fuel_type, date) %>%
+  summarize(
+    has_14_consecutive_nas = any(rle(is.na(price_value))$lengths[rle(is.na(price_value))$values] >= 14),
+    .groups = "drop"
+  ) %>%
+  filter(has_14_consecutive_nas)
+
+# Count stations with long NA streaks
+num_stations_with_na_streak <- nrow(stations_with_na_streak)
+
+cat("Number of stations with at least 14 consecutive NAs:", num_stations_with_na_streak, "\n")
+
+# Investigate their contribution to the dataset
+stations_with_na_data <- final_data %>%
+  filter(station_id %in% stations_with_na_streak$station_id)
+
+cat("Total observations contributed by affected stations:", nrow(stations_with_na_data), "\n")
+cat("Proportion of total observations:", nrow(stations_with_na_data) / nrow(final_data), "\n")
+
+
+
+
+
+# alternative
+
+# Identify stations with at least 14 consecutive NAs
+stations_with_na_streak_alt <- final_data %>%
+  group_by(station_id, fuel_type) %>%
+  arrange(station_id, fuel_type, date) %>%
+  mutate(na_group = cumsum(!is.na(price_value))) %>%  # Create groups of consecutive NAs
+  group_by(station_id, fuel_type, na_group) %>%       # Group by streaks
+  summarize(
+    streak_length = n(),                              # Count streak length
+    is_na_streak = all(is.na(price_value)),           # Confirm streak is all NAs
+    .groups = "drop"
+  ) %>%
+  filter(is_na_streak & streak_length >= 14) %>%      # Filter streaks of 14+ consecutive NAs
+  distinct(station_id, fuel_type)                    # Keep unique station_id and fuel_type combinations
+
+# Count stations with long NA streaks
+num_stations_with_na_streak_alt <- nrow(stations_with_na_streak_alt)
+
+cat("Number of stations with at least 14 consecutive NAs:", num_stations_with_na_streak_alt, "\n")
+
+# Investigate their contribution to the dataset
+stations_with_na_data_alt <- final_data %>%
+  filter(station_id %in% stations_with_na_streak_alt$station_id)
+
+cat("Total observations contributed by affected stations:", nrow(stations_with_na_data_alt), "\n")
+cat("Proportion of total observations:", nrow(stations_with_na_data_alt) / nrow(final_data), "\n")
+
+
+
+
+
+
+# # Step 1: Calculate rolling variation within a 14-day window
+# rolling_variation <- final_data %>%
+#   group_by(station_id, fuel_type) %>%
+#   arrange(station_id, fuel_type, date) %>%
+#   mutate(rolling_sd = zoo::rollapply(
+#     price_value, 
+#     width = 14, 
+#     FUN = sd, 
+#     fill = NA, 
+#     align = "right" # Calculate backward-looking variation
+#   ))
+# 
+# 
+# sum(is.na(rolling_variation$rolling_sd))
+# 
+# 
+# # Step 2: Identify stations with no variation in 14-day windows
+# non_varying_stations <- rolling_variation %>%
+#   group_by(station_id, fuel_type) %>%
+#   summarize(
+#     all_zero_variation = all(is.na(rolling_sd) | rolling_sd < 1e-6), # Tolerance for numerical precision
+#     .groups = "drop"
+#   ) %>%
+#   filter(all_zero_variation)
+# 
+# 
+# # Step 3: Count and examine the number of affected stations
+# affected_station_count <- nrow(non_varying_stations)
+# affected_station_ids <- non_varying_stations$station_id
+# 
+# cat("Number of stations with no price variation in 14-day windows:", affected_station_count, "\n")
+# 
+# # Step 4: Investigate their overall contribution to the dataset
+# affected_station_data <- final_data %>%
+#   filter(station_id %in% affected_station_ids)
+# 
+# 
+# cat("Total observations contributed by affected stations:", nrow(affected_station_data), "\n")
+# cat("Proportion of total observations:", nrow(affected_station_data) / nrow(final_data), "\n")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Now the missing values have to be imputed. Every missing value for price_value can simply be replaced by the value of the day before (for each individual station inside each fueltype category). This is done in the next step.
 
