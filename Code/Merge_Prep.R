@@ -170,3 +170,16 @@ df <- df[!station_uuid %in% missing_lat_lon$station_uuid]
 
 df[, dummy_FTD := ifelse(date_only >= "2022-06-01" & date_only <= "2022-08-31", 1, 0)]
 
+
+# Data Exploration --------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
