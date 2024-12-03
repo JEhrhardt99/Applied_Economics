@@ -107,9 +107,66 @@ unique(df$station_uuid) |> length()
 
 
 
+# see if there are any missings among longitude and latitude
+
+
+df[is.na(longitude) | is.na(latitude)] |> nrow()
+df[is.na(longitude) | is.na(latitude)]
+
+df[is.na(longitude)]
+df[is.na(latitude)]
+
+df_weird <- df[is.na(longitude) | is.na(latitude)]
+
+# which stations?
+unique(df_weird$station_uuid)
+
+# okay so sometimes, for some stations, longitude and latitude are randomly misssing. 
+# This can be solved. The stations are still in the data df, so we can just fill them in with the correct values.
+# Stations will not move in space, so the NAs can be filled by a value of the same station. This is the task at hand:
+
+# Group by station_uuid and fill missing values with non-NA ones
+df[, latitude := ifelse(all(is.na(latitude)),
+                        NA,  # Keep it as NA if all values are missing
+                        ifelse(is.na(latitude),
+                               max(latitude, na.rm = TRUE),
+                               latitude)), 
+   by = station_uuid]
+
+
+df[, longitude := ifelse(all(is.na(longitude)),
+                        NA,  # Keep it as NA if all values are missing
+                        ifelse(is.na(longitude),
+                               max(longitude, na.rm = TRUE),
+                               longitude)), 
+   by = station_uuid]
+
+# Check if there are any remaining missing values
+missing_lat_lon <- df[is.na(longitude) | is.na(latitude)]
+nrow(missing_lat_lon)
 
 
 
 
 
+
+# how many observations of the station 00061087-0010-4444-8888-acdc00000010 are there in df?
+df[station_uuid == "00061087-0010-4444-8888-acdc00000010"] |> nrow()
+
+test <- df[station_uuid == "00061087-0010-4444-8888-acdc00000010"]
+
+# Here the unbalanced panel structure kicks in. This seems to be a station that was only for a short amount
+# of time on the market. The station count is rather low, so I will drop all stations that still have no longitude and
+# latitude values after imputation.
+
+
+df <- df[!station_uuid %in% missing_lat_lon$station_uuid]
+
+
+
+# Dummies -----------------------------------------------------------------
+
+# Create a dummy for the FTD period (dummy_FTD = 1 if date_only is between 2022-06-01 and 2022-08-31)
+
+df[, dummy_FTD := ifelse(date_only >= "2022-06-01" & date_only <= "2022-08-31", 1, 0)]
 
