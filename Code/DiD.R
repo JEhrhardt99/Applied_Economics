@@ -29,6 +29,7 @@ library(microbenchmark)
 library(lubridate)
 library(visdat)
 library(zoo)
+library(fixest)
 
 # Set WD ------------------------------------------------------------------
 
@@ -147,11 +148,50 @@ modelsummary(
 
 
 
+# 2. DiD fixest ---------------------------------------------------
+
+## No FE ---------------------------------------------------------------
+
+DiD_feols <- feols(avg_diesel ~ dummy_GER + dummy_FTD + dummy_GER:dummy_FTD,
+                   data = df_period)
+
+
+summary(DiD_feols)
+
+## FE ---------------------------------------------------------------
+
+DiD_FE_d <- feols(avg_diesel ~ dummy_GER + dummy_FTD + dummy_GER:dummy_FTD |
+                    station_uuid + date_only,
+                  data = df_period)
+
+summary(DiD_FE_d)
+
+# perfect multicollinearity -> only the interaction term needed
+
+DiD_FE_d <- feols(avg_diesel ~ dummy_GER:dummy_FTD |
+                    station_uuid + date_only,
+                  data = df_period)
+
+summary(DiD_FE_d)
 
 
 
+DiD_FE_E10 <- feols(avg_e10 ~ dummy_GER:dummy_FTD |
+                    station_uuid + date_only,
+                  data = df_period)
 
+summary(DiD_FE_E10)
 
+# next steps: Display this nicely in a table
+# include R2 within and look up the Meaning
+# make a table to compare with and without fixed effects for each fuel respectively
+# estimate FE model again with shorter time period arount the introduction point
+# => see if the point estimates are higher... First indicator for decline in pass through rate
+
+# look up how to cluster standard errors in fixest
+# implement it
+
+# Only than I can start with the competition metric and the dynamic DiD Approach
 
 
 
