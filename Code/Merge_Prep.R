@@ -11,6 +11,11 @@
 
 # Load Libraries ----------------------------------------------------------
 
+library(modelsummary)
+library(estimatr)
+library(lmtest)
+library(sandwich)
+library(haven)
 library(ggplot2)
 library(ggthemes)
 library(jsonlite)
@@ -171,13 +176,15 @@ df <- df[!station_uuid %in% missing_lat_lon$station_uuid]
 df[, dummy_FTD := ifelse(date_only >= "2022-06-01" & date_only <= "2022-08-31", 1, 0)]
 
 
-# Data Exploration --------------------------------------------------------
+# Spatial Operations --------------------------------------------------------
 
 
 
 
+# Save Preprocessed Data --------------------------------------------------
 
-
+fwrite(df, "../../Data/Preprocessed/final_data.csv.gz",
+       row.names = FALSE)
 
 
 
