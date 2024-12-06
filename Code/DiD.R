@@ -300,6 +300,7 @@ models_FE[["$p_{it}$ (Diesel) FE W2"]] <- DiD_FE_d_w_2
 models_FE[["$p_{it}$ (E10) FE W2"]] <- DiD_FE_E10_w_2
 
 
+options("modelsummary_format_numeric_latex" = "plain")
 
 # Generate modelsummary table
 modelsummary(
@@ -307,9 +308,43 @@ modelsummary(
   stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
   coef_map = var_labels,
   gof_map = gof_labels,
-  fmt = 4
+  fmt = 4,
+  latex = TRUE
+  # escape = FALSE,
+  # output = "test1.tex"
 )
 
+
+
+# # Installiere die neueste Version von modelsummary
+# install.packages("modelsummary")
+# 
+# # Installiere ggf. alle Abhängigkeiten
+# install.packages("broom")
+# install.packages("kableExtra")
+
+# library(kableExtra)
+# 
+# # Erzeuge die modelsummary-Tabelle als LaTeX
+# modelsummary_output <- modelsummary::modelsummary(
+#   models_FE,
+#   stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
+#   coef_map = var_labels,
+#   gof_map = gof_labels,
+#   fmt = 4,
+#   latex = TRUE,
+#   escape = FALSE,
+#   output = NULL  # Wir speichern es nicht direkt in eine Datei
+# )
+# 
+# # Konvertiere das Ergebnis in ein kable-Objekt und füge Label und Caption hinzu
+# kable_output <- kableExtra::kable_styling(modelsummary_output) %>%
+#   kableExtra::kable_latex(escape = FALSE) %>%
+#   kableExtra::add_caption("Your Caption Here") %>%
+#   kableExtra::add_label("tab:DiD_FE")
+# 
+# # Schreibe das Ergebnis in eine LaTeX-Datei
+# writeLines(kable_output, "test1.tex")
 
 
 
