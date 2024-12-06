@@ -249,36 +249,66 @@ modelsummary(
 
 
 
-
-
-
-
+# done:
 
 # next steps: Display this nicely in a table
 # include R2 within and look up the Meaning
 # make a table to compare with and without fixed effects for each fuel respectively
-# estimate FE model again with shorter time period arount the introduction point
-# => see if the point estimates are higher... First indicator for decline in pass through rate
-
 # look up how to cluster standard errors in fixest
 # implement it
+
+
+# to do:
+
+# estimate FE model again with shorter time period arount the introduction point
+# => see if the point estimates are higher... First indicator for decline in pass through rate
 
 # Only than I can start with the competition metric and the dynamic DiD Approach
 
 
 
+## FE with shorter time period ---------------------------------------------------------------
+
+# 2 Weeks around Introduction
+df_weeks_2 <- df[date_only >= "2022-05-18" & date_only <= "2022-06-14"]
+
+# rename station_uuid to Station so it looks nicer in the output later when adding clustered Standard Errors
+df_weeks_2 <- df_weeks_2 %>%
+  rename(Station = station_uuid)
+
+# FE Model with 2 Weeks around the introduction of the FTD in Germany (Diesel)
+DiD_FE_d_w_2 <- feols(
+  avg_diesel ~ dummy_GER:dummy_FTD | Station + date_only,
+  data = df_weeks_2,
+  vcov = ~Station
+)
+
+summary(DiD_FE_d)
+
+# FE Model with 2 Weeks around the introduction of the FTD in Germany (E10)
+DiD_FE_E10_w_2 <- feols(
+  avg_e10 ~ dummy_GER:dummy_FTD | Station + date_only,
+  data = df_weeks_2,
+  vcov = ~Station
+)
+
+summary(DiD_FE_E10)
+
+
+# Add to FE models list
+models_FE[["$p_{it}$ (Diesel) FE W2"]] <- DiD_FE_d_w_2
+models_FE[["$p_{it}$ (E10) FE W2"]] <- DiD_FE_E10_w_2
 
 
 
-
-
-
-
-
-
-
-
-
+# Generate modelsummary table
+modelsummary(
+  models_FE,
+  stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
+  coef_map = var_labels,
+  gof_map = gof_labels,
+  fmt = 4
+)
 
 
 
