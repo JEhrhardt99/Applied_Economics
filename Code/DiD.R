@@ -19,12 +19,9 @@ library(sandwich)
 library(haven)
 library(ggplot2)
 library(ggthemes)
-library(jsonlite)
 library(tidyverse)
 library(data.table)
 library(purrr)
-library(xml2)
-library(XML)
 library(microbenchmark)
 library(lubridate)
 library(visdat)
@@ -302,14 +299,18 @@ models_FE[["$p_{it}$ (E10) FE W2"]] <- DiD_FE_E10_w_2
 
 options("modelsummary_format_numeric_latex" = "plain")
 
+# create a label for the dummy term variable 
+
+
 # Generate modelsummary table
 modelsummary(
   models_FE,
   stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
-  coef_map = var_labels,
+  # coef_map = var_labels,
   gof_map = gof_labels,
   fmt = 4,
-  latex = TRUE
+  latex = TRUE,
+  coef_rename = TRUE # kann nicht in Verbindung mit coef_map gemacht werden
   # escape = FALSE,
   # output = "test1.tex"
 )
