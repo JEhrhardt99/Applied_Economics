@@ -282,6 +282,17 @@ df_weeks_2 <- df[date_only >= "2022-05-18" & date_only <= "2022-06-14"]
 df_weeks_2 <- df_weeks_2 %>%
   rename(Station = station_uuid)
 
+
+
+# test: use fixest panel() function to let R now who the individuals are and what the time is
+# this is needed since we have an unbalenced panel
+# Mr. Huse said that this is necceaary to get the correct standard errors, but it does not change anything
+
+
+panel(df_weeks_2, panel.id = c("Station", "date_only"))
+
+
+
 # FE Model with 2 Weeks around the introduction of the FTD in Germany (Diesel)
 DiD_FE_d_w_2 <- feols(
   avg_diesel ~ dummy_GER:dummy_FTD | Station + date_only,
@@ -327,35 +338,13 @@ modelsummary(
 
 
 
-# # Installiere die neueste Version von modelsummary
-# install.packages("modelsummary")
-# 
-# # Installiere ggf. alle Abhängigkeiten
-# install.packages("broom")
-# install.packages("kableExtra")
 
-# library(kableExtra)
-# 
-# # Erzeuge die modelsummary-Tabelle als LaTeX
-# modelsummary_output <- modelsummary::modelsummary(
-#   models_FE,
-#   stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
-#   coef_map = var_labels,
-#   gof_map = gof_labels,
-#   fmt = 4,
-#   latex = TRUE,
-#   escape = FALSE,
-#   output = NULL  # Wir speichern es nicht direkt in eine Datei
-# )
-# 
-# # Konvertiere das Ergebnis in ein kable-Objekt und füge Label und Caption hinzu
-# kable_output <- kableExtra::kable_styling(modelsummary_output) %>%
-#   kableExtra::kable_latex(escape = FALSE) %>%
-#   kableExtra::add_caption("Your Caption Here") %>%
-#   kableExtra::add_label("tab:DiD_FE")
-# 
-# # Schreibe das Ergebnis in eine LaTeX-Datei
-# writeLines(kable_output, "test1.tex")
+
+
+
+
+
+
 
 
 
