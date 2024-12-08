@@ -27,6 +27,8 @@ library(lubridate)
 library(visdat)
 library(zoo)
 library(fixest)
+library(Hmisc)
+
 
 # Set WD ------------------------------------------------------------------
 
@@ -42,7 +44,11 @@ getwd()
 
 df <- fread("../../Data/Preprocessed/final_data.csv.gz")
 
+# add label to the dummy term variable for a nice display in the modelsummary later,
+# since the var_labels can not be used if if coef_rename function is active
 
+label(df$dummy_GER) <- "$GER_{i}$"
+label(df$dummy_FTD) <- "$FTD_{t}$"
 
 # 1. DiD basic ------------------------------------------------------------
 
@@ -118,6 +124,7 @@ modelsummary(
 # France started a TFD on 2022-04-01, Parallel Trends can only be assumed since this period
 
 df_period <- df[date_only >= "2022-04-01" & date_only <= "2022-08-31"]
+
 
 
 ### Diesel ---------------------------------------------------------------
@@ -240,8 +247,10 @@ models <- models[-c(1,2)]
 modelsummary(
   c(models, models_FE),
   stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
-  coef_map = var_labels, # Apply custom coefficient labels
+  coef_map = var_labels, 
   gof_map = gof_labels
+  # escape = FALSE,
+  # output = "test1.tex"
 )
 
 
@@ -300,6 +309,7 @@ models_FE[["$p_{it}$ (E10) FE W2"]] <- DiD_FE_E10_w_2
 options("modelsummary_format_numeric_latex" = "plain")
 
 # create a label for the dummy term variable 
+
 
 
 # Generate modelsummary table
