@@ -259,6 +259,9 @@ colnames(station_neighbor_counts) <- c("station_uuid", "neighbors_count", "geome
 
 str(station_neighbor_counts)
 
+# Convert station_neighbor_counts to a data.table 
+setDT(station_neighbor_counts)
+
 # drop geometry
 station_neighbor_counts <- station_neighbor_counts %>%
   sf::st_drop_geometry() %>%
@@ -268,8 +271,7 @@ station_neighbor_counts <- station_neighbor_counts %>%
 str(station_neighbor_counts)
 str(df)
 
-# Convert station_neighbor_counts to a data.table 
-setDT(station_neighbor_counts)
+
 
 # Perform the join: Add neighbors_count to df
 df <- merge(df, station_neighbor_counts,
@@ -312,108 +314,6 @@ ggplot(station_neighbor_counts, aes(x = neighbors_count - 1)) +
        x = "Number of Competitors",
        y = "Frequency") +
   geom_vline(aes(xintercept = mean(neighbors_count)), color = "red", linetype = "dashed")
-
-
-
-
-
-# Example with Fuel Stations ----------------------------------------------
-
-# stations <- "https://dev.azure.com/tankerkoenig/362e70d1-bafa-4cf7-a346-1f3613304973/_apis/git/repositories/0d6e7286-91e4-402c-af56-fa75be1f223d/items?path=/stations/2024/12/2024-12-03-stations.csv&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0&download=true" |> 
-#   readr::read_csv() 
-# 
-# stations <- stations |> 
-#   dplyr::filter(longitude != 0, latitude != 0, longitude < 20)
-# 
-# head(stations)
-# 
-# # Turn into SF
-# stations_sf <- stations |> 
-#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-# 
-# 
-# 
-# # Weird looking plot
-# ggplot()+
-#   geom_sf(data = stations_sf)
-# 
-# 
-# # Plot with state boundaries
-# # Zoomed in Oldenburg, with highlight added
-# states_deu <- geodata::gadm(country = c("DEU","FRA"), level = 2, path = tempdir()) |> 
-#   sf::st_as_sf() 
-# 
-# ggplot() +
-#   geom_sf(data = states_deu,
-#           linewidth = 1.5) +
-#   geom_sf(data = stations_sf, alpha = 0.25, size = 1) +
-#   coord_sf(
-#     xlim = c(5, 15.3),
-#     ylim = c(41, 55.5)
-#   )
-# 
-# 
-# stations_buffer <- stations_sf |> 
-#   st_buffer(dist = units::as_units(5, "km")) 
-# 
-# 
-# # Join Stations and buffers:
-# nb_list <- st_within(stations_sf, stations_buffer)
-# 
-# # See number of neighboring fuel stations
-# number_neighbors <- nb_list |> 
-#   sapply(length)
-# 
-# hist(number_neighbors)
-# 
-# stations_join <- stations_sf |> 
-#   sf::st_join(stations_buffer)
-# 
-# ## Create Map of Landkreise by Station Density
-# states_deu_joined <- states_deu |> 
-#   sf::st_join(stations_sf)
-# 
-# states_deu_joined <- states_deu_joined |> 
-#   sf::st_drop_geometry() |> 
-#   dplyr::group_by(NAME_2) |>
-#   dplyr::summarise(n_stations = n())
-# 
-# 
-# states_deu_map <- states_deu |> 
-#   dplyr::left_join(states_deu_joined, by = c("NAME_2" = "NAME_2"))
-# 
-# ggplot()+
-#   geom_sf(data = states_deu_map, aes(fill = n_stations))+
-#   scale_fill_viridis_c(option = "C", name = "Number of Fuel Stations")
-# 
-# 
-# 
-# 
-# 
-# # Get Coordinates of Neighbors --------------------------------------------
-# # Vector of Row Numbers of Neighbors
-# nb_list[[1]]
-# 
-# # Get coordinates of neighbors
-# stations[nb_list[[1]], c("latitude", "longitude")]
-# 
-# # Or Dplyr style:
-# loc <- stations |> 
-#   dplyr::slice(nb_list[[1]]) |> 
-#   dplyr::select(uuid, latitude, longitude)
-# 
-# # Build Request from OSRM, needs to be installed; need to run the server etc..
-# #osrm::osrmTable(loc = loc)
-# 
-
-
-
-
-
-
-
-
-
 
 
 
