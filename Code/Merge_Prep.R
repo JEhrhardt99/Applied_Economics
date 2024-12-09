@@ -58,15 +58,12 @@ str(df_GERp)
 str(df_GERs)
 
 # In df_FRA the id variable ist stored as int -> make it chr to be able to merge later
-
 df_FRA$station_id <- as.character(df_FRA$station_id)
 
 # Rename station_id to station_uuid to match the column name in df_GERp
-
 colnames(df_FRA)[colnames(df_FRA) == "station_id"] <- "station_uuid"
 
 # why so many observations in df_GERs?
-
 unique(df_GERs$uuid) |> length()
 
 
@@ -98,24 +95,17 @@ str(df_FRA)
 merged_GER[, dummy_GER := 1]
 df_FRA[, dummy_GER := 0]
 
-
+# Rename the columns in df_FRA to match the columns in merged_GER
 setnames(df_FRA, old = c("date", "E10", "Gazole"), 
          new = c("date_only", "avg_e10", "avg_diesel"))
-
 
 # Bind the rows of the two data.tables
 df <- rbind(merged_GER, df_FRA, fill = TRUE)
 
-
-
 # how many stations in total?
 unique(df$station_uuid) |> length()
 
-
-
 # see if there are any missings among longitude and latitude
-
-
 df[is.na(longitude) | is.na(latitude)] |> nrow()
 df[is.na(longitude) | is.na(latitude)]
 
@@ -153,9 +143,6 @@ nrow(missing_lat_lon)
 
 
 
-
-
-
 # how many observations of the station 00061087-0010-4444-8888-acdc00000010 are there in df?
 df[station_uuid == "00061087-0010-4444-8888-acdc00000010"] |> nrow()
 
@@ -163,21 +150,180 @@ test <- df[station_uuid == "00061087-0010-4444-8888-acdc00000010"]
 
 # Here the unbalanced panel structure kicks in. This seems to be a station that was only for a short amount
 # of time on the market. The station count is rather low, so I will drop all stations that still have no longitude and
-# latitude values after imputation.
+# latitude values after imputation. This corresponds to stations that are not only on the market for a short time and do not have spatial data.
 
 
 df <- df[!station_uuid %in% missing_lat_lon$station_uuid]
 
 
 
+
+
 # Dummies -----------------------------------------------------------------
 
 # Create a dummy for the FTD period (dummy_FTD = 1 if date_only is between 2022-06-01 and 2022-08-31)
-
 df[, dummy_FTD := ifelse(date_only >= "2022-06-01" & date_only <= "2022-08-31", 1, 0)]
 
 
 # Spatial Operations --------------------------------------------------------
+
+# clear the environment except for df
+rm(list = ls()[!ls() %in% "df"])
+
+# special libraries:
+library(sf) # Simple features
+library(terra) # Raster data
+library(geodata) # For spatial data
+library(exactextractr) # Extract raster data
+
+
+## Extract Cross Sectional Stations -----------------------------------
+
+# How many unique stations?
+unique(df$station_uuid) |> length()
+
+# Get unique stations and keep longitude and latitude
+stations <- df |> 
+  dplyr::select(station_uuid, longitude, latitude) |> 
+  dplyr::distinct()
+
+# Turn into SF
+stations_sf <- stations |> 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Plot Stations
+ggplot()+
+  geom_sf(data = stations_sf)
+
+# there seem to be some outliers
+# => from visual inspection, one can see that stations with should be omitted that have longitude < 40 or latitude > 20
+# This will be done in df directly
+df <- df |> 
+  dplyr::filter(longitude < 20, latitude > 40)
+
+# How many unique stations?
+unique(df$station_uuid) |> length()
+
+# Get unique stations and keep longitude and latitude
+stations <- df |> 
+  dplyr::select(station_uuid, longitude, latitude) |> 
+  dplyr::distinct()
+
+# Turn into SF
+stations_sf <- stations |> 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Plot Stations
+ggplot()+
+  geom_sf(data = stations_sf)
+
+
+
+
+
+## 5km Buffer ---------------------------------------------------------------
+
+
+
+
+# Example with Fuel Stations ----------------------------------------------
+
+stations <- "https://dev.azure.com/tankerkoenig/362e70d1-bafa-4cf7-a346-1f3613304973/_apis/git/repositories/0d6e7286-91e4-402c-af56-fa75be1f223d/items?path=/stations/2024/12/2024-12-03-stations.csv&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0&download=true" |> 
+  readr::read_csv() 
+
+stations <- stations |> 
+  dplyr::filter(longitude != 0, latitude != 0, longitude < 20)
+
+head(stations)
+
+# Turn into SF
+stations_sf <- stations |> 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+
+
+# Weird looking plot
+ggplot()+
+  geom_sf(data = stations_sf)
+
+
+# Plot with state boundaries
+# Zoomed in Oldenburg, with highlight added
+states_deu <- geodata::gadm(country = c("DEU","FRA"), level = 2, path = tempdir()) |> 
+  sf::st_as_sf() 
+
+ggplot() +
+  geom_sf(data = states_deu,
+          linewidth = 1.5) +
+  geom_sf(data = stations_sf, alpha = 0.25, size = 1) +
+  coord_sf(
+    xlim = c(5, 15.3),
+    ylim = c(41, 55.5)
+  )
+
+
+stations_buffer <- stations_sf |> 
+  st_buffer(dist = units::as_units(5, "km")) 
+
+
+# Join Stations and buffers:
+
+nb_list <- st_within(stations_sf, stations_buffer)
+
+# See number of neighboring fuel stations
+number_neighbors <- nb_list |> 
+  sapply(length)
+hist(number_neighbors)
+
+stations_join <- stations_sf |> 
+  sf::st_join(stations_buffer)
+
+## Create Map of Landkreise by Station Density
+states_deu_joined <- states_deu |> 
+  sf::st_join(stations_sf)
+
+states_deu_joined <- states_deu_joined |> 
+  sf::st_drop_geometry() |> 
+  dplyr::group_by(NAME_2) |>
+  dplyr::summarise(n_stations = n())
+
+
+states_deu_map <- states_deu |> 
+  dplyr::left_join(states_deu_joined, by = c("NAME_2" = "NAME_2"))
+
+ggplot()+
+  geom_sf(data = states_deu_map, aes(fill = n_stations))+
+  scale_fill_viridis_c(option = "C", name = "Number of Fuel Stations")
+
+
+
+
+
+# Get Coordinates of Neighbors --------------------------------------------
+# Vector of Row Numbers of Neighbors
+nb_list[[1]]
+
+# Get coordinates of neighbors
+stations[nb_list[[1]], c("latitude", "longitude")]
+
+# Or Dplyr style:
+loc <- stations |> 
+  dplyr::slice(nb_list[[1]]) |> 
+  dplyr::select(uuid, latitude, longitude)
+
+# Build Request from OSRM, needs to be installed; need to run the server etc..
+#osrm::osrmTable(loc = loc)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
