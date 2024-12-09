@@ -49,6 +49,7 @@ df <- fread("../../Data/Preprocessed/final_data.csv.gz")
 
 label(df$dummy_GER) <- "$GER_{i}$"
 label(df$dummy_FTD) <- "$FTD_{t}$"
+label(df$neighbors_count) <- "$X_{i}$"
 
 # 1. DiD basic ------------------------------------------------------------
 
@@ -335,7 +336,6 @@ modelsummary(
   # escape = FALSE,
   # output = "test1.tex"
 )
-
 
 
 
