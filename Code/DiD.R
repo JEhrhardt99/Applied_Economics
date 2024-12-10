@@ -441,18 +441,107 @@ modelsummary(
 
 
 
+## Competition Integer ----------------------------------------------------
+
+
+
+### Period ----------------------------------------------------
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (Diesel)
+DiD_Comp_d <- feols(
+  avg_diesel ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_count | Station + date_only,
+  data = df_period,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_d)
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (E10)
+DiD_Comp_e10 <- feols(
+  avg_e10 ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_count | Station + date_only,
+  data = df_period,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_e10)
+
+
+### 2 Weeks ----------------------------------------------------
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (Diesel)
+DiD_Comp_d_w_2 <- feols(
+  avg_diesel ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_count | Station + date_only,
+  data = df_weeks_2,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_d_w_2)
+
+
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (E10)
+DiD_Comp_e10_w_2 <- feols(
+  avg_e10 ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_count | Station + date_only,
+  data = df_weeks_2,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_e10_w_2)
+
+
+# Models with comp integer
+models_comp_dummy[["$p_{it}$ (Diesel) Int"]] <- DiD_Comp_d
+models_comp_dummy[["$p_{it}$ (Diesel) 2 Weeks Int"]] <- DiD_Comp_d_w_2
+models_comp_dummy[["$p_{it}$ (E10) Int"]] <- DiD_Comp_e10
+models_comp_dummy[["$p_{it}$ (E10) 2 Weeks Int"]] <- DiD_Comp_e10_w_2
 
 
 
 
 
+# Custom GoF labels: Include all desired GoF statistics
+# R2 and R2 adjusted are not needed when FE are implemented
+gof_labels <- tribble(
+  ~raw,            ~clean,                ~fmt,      # Specify raw names, desired label, and format
+  "r2.within",     "$R^2_{\\text{within}}$", 3,
+  "r2.within.adjusted",     "$R^2_{\\text{within}}$ (adjusted)", 3,
+  "rmse",          "RMSE", 3,
+  "FE: Station", "$\\alpha_{i}$", NA,
+  "FE: date_only", "$\\tau_{t}$", NA,
+  "vcov.type",     "Clustered SE",   NA,
+  "nobs",          "$N$", 0      
+)
+
+
+
+# Generate modelsummary table
+modelsummary(
+  models_comp_dummy,
+  stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
+  # coef_map = var_labels,
+  gof_map = gof_labels,
+  fmt = 4,
+  latex = TRUE,
+  coef_rename = TRUE # kann nicht in Verbindung mit coef_map gemacht werden
+  # escape = FALSE,
+  # output = "test1.tex"
+)
 
 
 
 
+# Intuition of the positive sign of delta in the 2Weeks Diesel Specification:
+# Since only 2 Weeks are used, this data reflects the pricing behavior right around the intro
+# of the FTD. During this time, the medial attention was especially high. 
+# It might be that especially stations with low competition thaught that they might be 
+# obseved by media and politics and therefore reduced their prices strategically to signal that 
+# they indeed pass through the tax reduction to the customers. Once this medial attention is gone,
+# the pass through rate might decrease again. This is a first indicator for the decline in pass through rate
+# and the importance of media attention for the pass through rate.
 
+# Question for next week. Is there a possibility to include the media attention in the model?
 
-
+# Next steps to do. Implement the dynamic DiD approach (base line and with the competition metric)
 
 
 
