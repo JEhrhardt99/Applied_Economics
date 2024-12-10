@@ -44,12 +44,30 @@ getwd()
 
 df <- fread("../../Data/Preprocessed/final_data.csv.gz")
 
+## Data Prep ---------------------------------------------------------------
+
+# most data preprocessing is done in Data_Prep.qmd or Merge_Prep.R
+# still, some steps are included here to make the data ready for the analysis and a nice display of output
+
 # add label to the dummy term variable for a nice display in the modelsummary later,
 # since the var_labels can not be used if if coef_rename function is active
 
 label(df$dummy_GER) <- "$GER_{i}$"
 label(df$dummy_FTD) <- "$FTD_{t}$"
 label(df$neighbors_count) <- "$X_{i}$"
+
+# create a dummy variable for competition
+df$neighbors_dummy <- ifelse(df$neighbors_count > 0, 1, 0)
+
+# label for nice display
+label(df$neighbors_dummy) <- "$D_{X_{i}}$"
+
+# how many stations have at least one competitor
+df |> 
+  dplyr::select(station_uuid, neighbors_dummy) |> 
+  dplyr::distinct() |>
+  dplyr::count(neighbors_dummy)
+
 
 # 1. DiD basic ------------------------------------------------------------
 
@@ -342,13 +360,82 @@ modelsummary(
 
 
 
+# Competition Baseline ----------------------------------------------------
+
+## Competition Dummy ----------------------------------------------------
+
+### Period ----------------------------------------------------
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (Diesel)
+DiD_Comp_Dummy_d <- feols(
+  avg_diesel ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_dummy | Station + date_only,
+  data = df_period,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_Dummy_d)
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (E10)
+DiD_Comp_Dummy_e10 <- feols(
+  avg_e10 ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_dummy | Station + date_only,
+  data = df_period,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_Dummy_e10)
+
+
+### 2 Weeks ----------------------------------------------------
+
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (Diesel)
+DiD_Comp_Dummy_d_w_2 <- feols(
+  avg_diesel ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_dummy | Station + date_only,
+  data = df_weeks_2,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_Dummy_d_w_2)
 
 
 
+# FE Model with Competition Dummy and 2 Weeks around the introduction of the FTD in Germany (E10)
+DiD_Comp_Dummy_e10_w_2 <- feols(
+  avg_e10 ~ dummy_GER:dummy_FTD + dummy_GER:dummy_FTD:neighbors_dummy | Station + date_only,
+  data = df_weeks_2,
+  vcov = ~Station
+)
+
+summary(DiD_Comp_Dummy_e10_w_2)
 
 
+# inizialize list
+models_comp_dummy <- list()
+
+# Models without comp dummy
+models_comp_dummy[["$p_{it}$ (Diesel) FE"]] <- DiD_FE_d
+models_comp_dummy[["$p_{it}$ (Diesel) FE 2 Weeks"]] <- DiD_FE_d_w_2
+models_comp_dummy[["$p_{it}$ (E10) FE"]] <- DiD_FE_E10
+models_comp_dummy[["$p_{it}$ (E10) FE 2 Weeks"]] <- DiD_FE_E10_w_2
+
+# Models with comp dummy
+models_comp_dummy[["$p_{it}$ (Diesel)"]] <- DiD_Comp_Dummy_d
+models_comp_dummy[["$p_{it}$ (Diesel) 2 Weeks"]] <- DiD_Comp_Dummy_d_w_2
+models_comp_dummy[["$p_{it}$ (E10)"]] <- DiD_Comp_Dummy_e10
+models_comp_dummy[["$p_{it}$ (E10) 2 Weeks"]] <- DiD_Comp_Dummy_e10_w_2
 
 
+# Generate modelsummary table
+modelsummary(
+  models_comp_dummy,
+  stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
+  # coef_map = var_labels,
+  gof_map = gof_labels,
+  fmt = 4,
+  latex = TRUE,
+  coef_rename = TRUE # kann nicht in Verbindung mit coef_map gemacht werden
+  # escape = FALSE,
+  # output = "test1.tex"
+)
 
 
 
