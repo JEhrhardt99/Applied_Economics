@@ -16,14 +16,26 @@
 
 \begin{equation}
 \label{eq:Pass_Through_Rate}
-\hat{p} = - \frac{\hat{\beta}}{FTD} 
+\hat{p} = - \frac{\hat{\delta}}{|FTD|} 
 \end{equation}
+
+\begin{tiny}
+Following \textcite{Frondel2024}    
+\end{tiny}
 
 \end{block}
 
 
 
-Following \textcite{Frondel2024}
+
+
+\vspace{0.4cm}
+
+\begin{outline}
+    \1 $\hat{\delta}$: Estimated price change \textbf{caused} by the policy
+    \1 $|FTD|$: Fuel tax discount (35.16 cents E10; 16.71 cents Diesel)
+    \1 $\hat{p}$: Estimated \textbf{pass-through rate}
+\end{outline}
 
 \end{frame}
 
@@ -33,41 +45,60 @@ Following \textcite{Frondel2024}
 
 
 
-\begin{frame}{Baseline Model Intro}
+\begin{frame}{Baseline Model}
 
 \vspace{-0.7cm}
 
-\begin{block}{Baseline Model}
+\begin{block}{Baseline Model without FE}
 
 \begin{equation}
 \begin{aligned}
 \label{eq:Base_DiD1}
-p_{it} &= \beta \cdot FTD_{t} \times GER_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it} \\
-&= \beta \cdot Treated_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it}
+p_{it} = \beta_{0} + \beta_{1} GER_{i} + \beta_{2} FTD_{t} + \delta \underbrace{GER_{i} \times FTD_{t}}_{Treated_{it}}  + \epsilon_{it}
 \end{aligned}
 \end{equation}
 
-\begin{tiny}
-    Following \textcite{Frondel2024}
-\end{tiny}
+% \begin{tiny}
+%     Following \textcite{Frondel2024}
+% \end{tiny}
 
 \end{block}
 
-\begin{outline}
-    \1 $FTD_{t}$: Dummy for treatment period
-    \1 $GER_{i}$: Dummy for treatment group
-    \1 $\gamma_{i}$: Station fixed effects
-    \1 $\tau_{t}$: Time (or day) fixed effects
-    \1 $\epsilon$: Idiosyncratic error term
-\end{outline}
+\tiny
 
 
 
+
+
+
+\begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{outline}
+        \1 \makebox[0.9cm][l]{$FTD_{t}$:} \textbf{1} if day $t$ is after, \textbf{0} if before treatment
+        \1 \makebox[0.9cm][l]{$GER_{i}$:} \textbf{1} if station $i$ is in GER, \textbf{0} if in FRA
+        \1 \makebox[0.9cm][l]{$Treated_{it}$:} \textbf{1} if station $i$ is in GER inside FTD\\  \makebox[0.9cm][l]{} period, \textbf{0} otherwise
+        \1 \makebox[0.9cm][l]{$\epsilon_{it}$:} Idiosyncratic error term
+      \end{outline}
+    \end{column}
+    \begin{column}{0.6\textwidth}
+        \begin{outline}
+        \1 \makebox[2cm][l]{$\beta_{0}$:} Avg price in FRA before FTD
+        \1 \makebox[2cm][l]{$\beta_{0} + \beta_{1}$:} Avg Price in GER before FTD
+        \1 \makebox[2cm][l]{$\beta_{0} + \beta_{2}$:} Avg Price in FRA after FTD
+        \1 \makebox[2cm][l]{$\beta_{0} + \beta_{1} + \beta_{2} + \delta$:} Avg Price in GER after FTD
+      \end{outline}
+    \end{column}
+\end{columns}
+
+\vspace{0.3cm}
+
+\centering
+
+$\underbrace{\left(\underbrace{\left(\beta_{0} + \beta_{1} + \beta_{2} + \delta\right)}_{\text{GER after}} - \underbrace{\left(\beta_{0} + \beta_{1}\right)}_{\text{GER before}}\right)}_{\text{Difference 1}} - \underbrace{\left(\underbrace{\left(\beta_{0} + \beta_{2}\right)}_{\text{FRA after}} - \underbrace{\left(\beta_{0}\right)}_{\text{FRA before}}\right)}_{\text{Difference 2}} = \underbrace{\delta}_{\text{ATT}}$
 
 
 
 \end{frame}
-
 
 
 
@@ -81,38 +112,73 @@ p_{it} &= \beta \cdot FTD_{t} \times GER_{i} &+ \gamma_{i} + \tau_{t} + \epsilon
 
 \vspace{-0.7cm}
 
-\begin{block}{Baseline Model}
+\begin{block}{Baseline Model with FE}
+
+\small
+
+\vspace{-0.3cm}
 
 \begin{equation}
 \begin{aligned}
 \label{eq:Base_DiD2}
-p_{it} &= \beta \cdot FTD_{t} \times GER_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it} \\
-&= \beta \cdot Treated_{i} &+ \gamma_{i} + \tau_{t} + \epsilon_{it}
+p_{it} = \beta_{0} &+ \beta_{1} GER_{i} + \beta_{2} FTD_{t} + \delta \underbrace{GER_{i} \times FTD_{t}}_{Treated_{it}} \\
+ &+ \gamma_{2}D2_{i} + \text{…} + \gamma_{n}Dn_{i} + \tau_{2}B2_{t} + \text{…} + \tau_{T}BT_{T} \\
+ &+ \epsilon_{it}
 \end{aligned}
 \end{equation}
 
-\begin{tiny}
-Following \textcite{Frondel2024}    
-\end{tiny}
+\vspace{-0.2cm}
+
+\begin{equation}
+\label{eq:Base_DiD3}
+p_{it} = \beta_{1} GER_{i} + \beta_{2} FTD_{t} + \delta \underbrace{GER_{i} \times FTD_{t}}_{Treated_{it}} + \alpha_{i} + \lambda_{t} + \epsilon_{it}
+\end{equation}
+
+% Here GERi and TFDt are absorbed by the fixed effects
+
+
 
 \end{block}
 
+\small
+
+$\longrightarrow$ $\alpha_{i}$: Station FE 
+
+$\longrightarrow$ $\gamma_{t}$: Time FE (daily intercepts)
+
+$\longrightarrow$ with $\alpha_{1} = \beta_{0}$ and for $i \geq 2$ with $\alpha_{i} = \beta_{0} + \gamma_{i}$
+
+$\longrightarrow$ with $\lambda_{1} = \beta_{0}$ and for $t \geq 2$ with $\lambda_{t} = \beta_{0} + \lambda_{t}$
+
+
+\end{frame}
+
+
+
+% ========================================================
+
+
+
+
+
+
+\begin{frame}{Baseline Model}
 
 
 \begin{outline}
-    \1 FE clustered at the group level (\textit{treatment} or \textit{control})
-    \2 Accounts for errors that are correlated within group over time
-    \2 would be overconfident (i.e., too small) otherwise
+    \1 Standard errors (SE) should be clustered at the station level due to serial correlation 
+    \2 Accounts for errors that are correlated within group over time 
+    \2 SE Would be overconfident (i.e., too small) otherwise
 \end{outline}
+
 
 \begin{center}
 (\cite{Huntington2022})   
 \end{center}
 
-
-
-
 \end{frame}
+
+
 
 
 
@@ -122,60 +188,150 @@ Following \textcite{Frondel2024}
 % ========================================================
 
 
+\begin{frame}{Estimates Baseline}
+
+\vspace{-1cm}
+
+\Tiny
 
 
 
-\begin{frame}{Baseline Model + Competition Metric}
+\begin{table}
+\caption{Baseline Model without vs. with FE}
+\centering
+\begin{talltblr}[         %% tabularray outer open
+entry=none,label=none,
+note{}={* p $<$ 0.1, ** p $<$ 0.05, *** p $<$ 0.01},
+]                     %% tabularray outer close
+{                     %% tabularray inner open
+colspec={Q[]Q[]Q[]Q[]Q[]},
+column{1}={halign=l,},
+column{2}={halign=c,},
+column{3}={halign=c,},
+column{4}={halign=c,},
+column{5}={halign=c,},
+hline{10}={1,2,3,4,5}{solid, 0.05em, black},
+}                     %% tabularray inner close
+\toprule
+& $p_{it}$ (Diesel) & $p_{it}$ (E10) & $p_{it}$ (Diesel) FE & $p_{it}$ (E10) FE \\ \midrule %% TinyTableHeader
+$\beta_{0}$                      & 1.886***  & 1.828***  &             &             \\
+& (0.000)   & (0.000)   &             &             \\
+$GER_{i}$                         & 0.141***  & 0.071***  &             &             \\
+& (0.000)   & (0.001)   &             &             \\
+$FTD_{t}$                         & 0.108***  & 0.102***  &             &             \\
+& (0.000)   & (0.000)   &             &             \\
+$GER_{i} \times FTD_{t}$         & -0.158*** & -0.297*** & -0.158***   & -0.298***   \\
+& (0.000)   & (0.001)   & (0.001)     & (0.001)     \\
+$R^2$                             & 0.172     & 0.061     & 0.721       & 0.971       \\
+$R^2$ (adjusted)                  & 0.172     & 0.061     & 0.720       & 0.971       \\
+$R^2_{\text{within}}$            &           &           & 0.310       & 0.503       \\
+$R^2_{\text{within}}$ (adjusted) &           &           & 0.310       & 0.503       \\
+RMSE                              & 0.097     & 0.382     & 0.056       & 0.067       \\
+$\alpha_{i}$                     &           &           & X           & X           \\
+$\tau_{t}$                       &           &           & X           & X           \\
+Clustered SE                      &           &           & by: Station & by: Station \\
+$N$                               & 3519976   & 3207244   & 3519976     & 3207244     \\
+\bottomrule
+\end{talltblr}
+\end{table}
 
-\vspace{-0.9cm}
 
-\begin{block}{Baseline Model}
+
+    
+\end{frame}
+
+
+
+
+
+
+
+% ========================================================
+
+
+\begin{frame}{Estimates Baseline}
+
+\vspace{-1cm}
+
+\tiny
+
+\begin{table}
+\caption{Baseline Model with FE for with different time periods}
+\centering
+\begin{talltblr}[         %% tabularray outer open
+entry=none,label=none,
+note{}={* p $<$ 0.1, ** p $<$ 0.05, *** p $<$ 0.01},
+]                     %% tabularray outer close
+{                     %% tabularray inner open
+colspec={Q[]Q[]Q[]Q[]Q[]},
+column{1}={halign=l,},
+column{2}={halign=c,},
+column{3}={halign=c,},
+column{4}={halign=c,},
+column{5}={halign=c,},
+hline{4}={1,2,3,4,5}{solid, 0.05em, black},
+}                     %% tabularray inner close
+\toprule
+& $p_{it}$ (Diesel) FE & $p_{it}$ (E10) FE & $p_{it}$ (Diesel) FE W2 & $p_{it}$ (E10) FE W2 \\ \midrule %% TinyTableHeader
+$GER_{i} \times FTD_{t}$         & -0.1582***  & -0.2977***  & -0.1748***  & -0.2979***  \\
+& (7.51e-04)  & (0.0011)    & (5.3e-04)   & (6.385e-04) \\
+$R^2$                             & 0.721       & 0.971       & 0.877       & 0.992       \\
+$R^2$ (adjusted)                  & 0.720       & 0.971       & 0.872       & 0.991       \\
+$R^2_{\text{within}}$            & 0.310       & 0.503       & 0.634       & 0.777       \\
+$R^2_{\text{within}}$ (adjusted) & 0.310       & 0.503       & 0.634       & 0.777       \\
+RMSE                              & 0.056       & 0.067       & 0.032       & 0.037       \\
+$\alpha_{i}$                     & X           & X           & X           & X           \\
+$\tau_{t}$                       & X           & X           & X           & X           \\
+Clustered SE                      & by: Station & by: Station & by: Station & by: Station \\
+$N$                               & 3519976     & 3207244     & 642819      & 585587      \\
+\bottomrule
+\end{talltblr}
+\end{table}
+
+
+
+
+    
+\end{frame}
+
+
+
+% ========================================================
+
+
+\begin{frame}{Baseline Model}
+
+\vspace{-0.7cm}
+
+\begin{block}{Baseline Model with FE + Competition Metric}
 
 \small
-\vspace{-0.4cm}
+
+\vspace{-0.3cm}
+
+
 \begin{equation}
-\begin{aligned}
-\label{eq:Base_DiD3}
-p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it} 
-\end{aligned}
-\end{equation}
-
-\begin{tiny}
-Following \textcite{Frondel2024}    
-\end{tiny}
-
-\end{block}
-
-
-
-\begin{block}{Baseline Model + Own Metric}
-
-\small
-\vspace{-0.6cm}
-\begin{equation}
-\begin{aligned}
 \label{eq:Base_DiD4}
-p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \delta \cdot (Comp_{i} \cdot FTD_{t} \times GER_{i}) + \gamma_{i} + \tau_{t} + \epsilon_{it} 
-\end{aligned}
+\resizebox{\textwidth}{!}{
+$\displaystyle
+p_{it} = \beta_{1} GER_{i} + \beta_{2} FTD_{t} + \delta \underbrace{GER_{i} \times FTD_{t}}_{Treated_{it}} + \phi \underbrace{GER_{i} \times FTD_{t}}_{Treated_{it}} \times X_{i} + \alpha_{i} + \lambda_{t} + \epsilon_{it}
+$}
 \end{equation}
 
-\vspace{-0.3cm}
-\begin{tiny}
-    Following own approach
-\end{tiny}
-
+% Note to this equation: A more sophisticated way would be to have the Competition Metric vary over time (some fuel stations close, open, etc.) -> add also as an addititive covariate in this case
 
 \end{block}
 
-\vspace{-0.3cm}
 
 \begin{outline}
-\small
-    \1 $Comp_{i}$: Nr. of Stations in a 5km radios of station $i$
-    \1 $\beta$: \textcolor{BrickRed}{?}Treatment effect for a station with $Comp_{i} = 0$\textcolor{BrickRed}{?}
-    \1 $\delta$: \textcolor{BrickRed}{?}The average impact of competition on the treatment effect ($\beta$)\textcolor{BrickRed}{?}
-    \1 \textcolor{BrickRed}{?}Play around with log specifications\textcolor{BrickRed}{?}
-\end{outline}
+        \1 \makebox[0.9cm][l]{$X_{i}$:} Nr. of Stations in a 5km radios of station $i$ \\
+        \makebox[0.9cm][l]{} (modeled as different intercepts \& different slopes)
+        \1 \makebox[0.9cm][l]{$\delta$:} \textcolor{BrickRed}{?}Treatment effect for a station with $Comp_{i} = 0$\textcolor{BrickRed}{?}
+        \1 \makebox[0.9cm][l]{$\phi$:} \textcolor{BrickRed}{?}The average impact of competition on the treatment \\
+        \makebox[1.15cm][l]{} effect ($\delta$)\textcolor{BrickRed}{?}
+        \1 \makebox[0.9cm][l]{} \textcolor{BrickRed}{?}Play around with log specifications\textcolor{BrickRed}{?}
+      \end{outline}
+
 
 
 \end{frame}
@@ -185,8 +341,100 @@ p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \delta \cdot (Comp_{i} \cdot FTD_{
 
 
 
+% ========================================================
+
+
+
+\begin{frame}{Heterogeneity over Time}
+
+
+\textcite{Huntington2022}:
+
+\begin{enumerate}
+    \item Generate a \textit{centered time variable}:
+    \begin{outline}
+        \1 Last period before treatment is $t=0$ (2022-05-31)
+        \1 First period with treatment implemented is $t=1$ (2022-06-01)
+        \1 Second-to-last period before treatment is $t=-1$ (2022-05-30)
+        \1 …
+        \1 with $T_{1}$ periods (days) before the treatment and $T_{2}$ periods (days) after the treatment
+    \end{outline} 
+    \item $Day_{t}$ will be a set of dummies for each day from $T_{1}$ to $T_{2}$
+\end{enumerate}
+
+
+
+
+
+
+
+
+    
+\end{frame}
+
+
 
 % ========================================================
+
+
+
+
+
+\begin{frame}{Heterogeneity over Time}
+
+
+
+
+
+
+\vspace{-0.7cm}
+
+
+\begin{block}{Dynamic Treatment Effects - Pass-Through}
+
+\vspace{-0.2cm}
+
+\footnotesize
+
+\begin{equation}
+\begin{aligned}
+\label{eq:Dynamic_DiD_long}
+p_{it} = & \beta_{-T_{1}} (Day_{-T_{1}} \times GER_{i}) + \\
+& \beta_{-(T_{1}-1)} (Day_{-(T_{1}-1)} \times GER_{i}) + \\
+& \text{…} + \\
+& \beta_{-1} (Day_{-1} \times GER_{i}) + \\
+& \beta_{1} (Day_{1} \times GER_{i}) + \\
+& \beta_{T_{2}} (Day_{T_{2}} \times GER_{i}) + \\
+& \text{…} + \\
+& \alpha_{i} + \lambda_{t} + \epsilon_{it}
+\end{aligned}
+\end{equation}
+
+
+$\longrightarrow$ Note that $\beta_{0}$ has to be omitted to avoid perfect multicollinearity. 
+
+$\Longrightarrow$ Every $\beta_{t}$ coefficient needs to be interpreted relatively to the last period before treatment (2022-05-31) (\cite{Huntington2022}).
+
+
+
+
+\end{block}
+
+
+
+
+
+
+    
+\end{frame}
+
+
+
+
+
+
+% ========================================================
+
 
 
 
@@ -197,7 +445,27 @@ p_{it} = \beta \cdot FTD_{t} \times GER_{i} + \delta \cdot (Comp_{i} \cdot FTD_{
 \vspace{-1.2cm}
 
 
-\begin{block}{Differential Pass-Through over Time}
+
+
+\begin{block}{Dynamic Treatment Effects - Pass-Through}
+
+\begin{equation}
+\label{eq:Dynamic_DiD_short}
+p_{it} = \sum_{T_{1}}^{T_{2}} \beta_{t} \cdot Day_{t} \times GER_{i} + \alpha_{i} + \lambda_{t} + \epsilon_{it}
+\end{equation}
+
+\begin{tiny}
+    own Notation
+\end{tiny}
+
+
+\end{block}
+
+
+
+
+
+\begin{block}{Dynamic Treatment Effects - Pass-Through}
 
 \begin{equation}
 \label{eq:Diff_DiD}
@@ -205,37 +473,12 @@ p_{it} = \sum_{t=1}^{T} \beta \cdot Day_{t} \times GER_{i} + \gamma_{i} + \tau_{
 \end{equation}
 
 \begin{tiny}
-    Following \textcite{Frondel2024}
+    as noted by \textcite{Frondel2024}
 \end{tiny}
 
 
 \end{block}
 
-\pause
-
-According to \textcite{Huntington2022}, what is actually estimated is $p_{it} = \sum_{t=-59}^{90} \beta \cdot Day_{t} \times GER_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}$ with $\beta_{-59}$ … until $\beta_{90}$ and $\beta_{0}$ (Coefficient of the interaction on the day before the treatment - 2022-05-31) \pause
-
-However, $\beta_{-59}$ up to $\beta_{-1}$ are assumed to be insignificant \textbf{and} close to 0 (also a test for parallel trends). 
-
-    
-\end{frame}
-
-
-
-
-% ========================================================
-
-
-
-
-
-\begin{frame}
-
-
-\enquote{We can do that! Difference-in-differences can be modified just a bit to allow the effect to differ in each time period. In other words, we can have dynamic treatment effects. This lets you see things like the effect taking a while to work, or fading out.} (\cite{Huntington2022}). \newline
-
-\enquote{While more broadly used, application of this method often refers to \textcite{Autor2001}} (\cite{Huntington2022}).
-
 
     
 \end{frame}
@@ -253,85 +496,6 @@ However, $\beta_{-59}$ up to $\beta_{-1}$ are assumed to be insignificant \textb
 
 
 
-% ========================================================
-
-
-
-
-
-\begin{frame}{Own Extension}
-
-\vspace{-1.cm}
-
-\begin{block}{Differential Pass-Through over Time with Competition}
-
-\small
-
-\vspace{-0.3cm}
-
-% Resize the equation to fit within the block width
-\begin{equation}
-\resizebox{\textwidth}{!}{
-$\displaystyle
-p_{it} = \sum_{t=-59}^{90} (\beta_{t} \cdot Day_{t} \times GER_{i} + \delta_{i} \cdot Day_{t} \times GER_{i} \times Comp_{i}) + \gamma_{i} + \tau_{t} + \epsilon_{it}
-$}
-\label{eq:Diff_DiD4}
-\end{equation}
-
-
-\vspace{-0.2cm}
-
-\begin{center}
-    or
-\end{center}
-
-\vspace{-0.2cm}
-
-% Resize the second equation
-\begin{equation}
-\resizebox{\textwidth}{!}{
-$\displaystyle
-p_{it} = \sum_{t=-59}^{90} \beta_{t} \cdot Day_{t} \times GER_{i} + \sum_{t=-59}^{90} \delta_{t} \cdot Day_{t} \times GER_{i} \times Comp_{i} + \gamma_{i} + \tau_{t} + \epsilon_{it}
-$}
-\label{eq:Diff_DiD5}
-\end{equation}
-
-\vspace{0.2cm}
-
-\begin{tiny}
-    Following own approach
-\end{tiny}
-
-\end{block}
-
-\end{frame}
-
-
-
-
-
-% ========================================================
-
-
-
-\begin{frame}{Frame Title}
-
-%     Warum e10 und nicht e5?
-
-
-% -> Gruppierten Datensatz nach ​
-
-
-% Für Stationid erzeugen:
-%     Anzahl Beobachtungen für E10 insgesamt; dann können Stationen rausfgefiltert werden, die bbspw. weniger als 50/100/200 Beobachtungen haben. Ist das nur ein kleiner Anteil? Dann unkritisch.
-    
-    
-    
-    
-%     Erstes Datum 2021-12-31 mitnehmen
-    
-%     df <- df |>
-%     tidyr::fill(price, direction = "down")
 
 
 
@@ -341,24 +505,196 @@ $}
 
 
 
-% -> Gruppierten Datensatz nach ​
 
 
-% Für Stationid erzeugen:
-%     Anzahl Beobachtungen für E10 insgesamt; dann können Stationen rausfgefiltert werden, die bbspw. weniger als 50/100/200 Beobachtungen haben. Ist das nur ein kleiner Anteil? Dann unkritisch.
-    
-    
-    
-    
-%     Erstes Datum 2021-12-31 mitnehmen
-    
-%     https://www.rdocumentation.org/packages/zoo/versions/1.8-12/topics/na.locf
-    
-%     maxgap z.B. auf 7 setzen
-    
-    
-%     Millionen von Beobachtungen im data.frame, die vor Angst schreien und dann verstummen. 
 
-    
-    
-\end{frame}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
