@@ -615,6 +615,9 @@ modelsummary(test_list,
 # Dynamic DiD Approach
 df_dynamic <- df_period 
 
+# try with this and it will work
+# df_dynamic <- df_weeks_2
+
 # Define the treatment date
 treatment_date <- as.IDate("2022-05-31")
 
