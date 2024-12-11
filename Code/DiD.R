@@ -539,6 +539,17 @@ modelsummary(
 # the pass through rate might decrease again. This is a first indicator for the decline in pass through rate
 # and the importance of media attention for the pass through rate.
 
+# What can be done about it?
+
+# Maybe this effect might vanish if I include more detailed fixed effects, 
+# like: station fixed effects and day fixed effects PER STATE. To do this, I would need 
+# to interact the day fixed effects with a variable for state fixed effects.
+# I currently do not have a state variable, but I can regain that from lat and long 
+# doing a spatial join operation.
+
+# Another Thing to do
+# Use the integer variable of Nr. of neigbhour stations and test for non linearity OR/AND use dummy with different threashholds and see how the coefficients might change
+
 # Question for next week. Is there a possibility to include the media attention in the model?
 
 # Next steps to do. Implement the dynamic DiD approach (base line and with the competition metric)
