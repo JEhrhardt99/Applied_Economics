@@ -837,7 +837,7 @@ print(t1 - t0)    # Calculate and print the elapsed time for the operation.
 
 ```{r}
 #| label: load_xml3
-#| echo: false
+#| echo: true
 #| output: true
 
 ######################### This works #######################
@@ -889,7 +889,7 @@ print(t1 - t0)
 
 ```{r}
 #| label: load_xml4
-#| echo: false
+#| echo: true
 #| output: true
 
 # show how many unique stations there are
@@ -918,7 +918,7 @@ fwrite(all_prices_new,
 
 ```{r}
 #| label: read_new
-#| echo: false
+#| echo: true
 #| output: true
 
 # read the saved data
@@ -928,7 +928,7 @@ all_prices_new <- fread("../../Data/Prix-des-carburants/2022/FRA_prices_save.csv
 
 ```{r}
 #| label: impute_missing_days
-#| echo: false
+#| echo: true
 #| output: true
 
 # show the first and last date of the data
@@ -947,7 +947,7 @@ So there are 4289 Observations in the data that are from 2021-12-31. These will 
 
 ```{r}
 #| label: impute_missing_days2
-#| echo: false
+#| echo: true
 #| output: true
 
 # omit the observations from 2021-12-31
@@ -958,7 +958,7 @@ all_prices_new <- all_prices_new %>%
 
 ```{r}
 #| label: impute_missing_days3
-#| echo: false
+#| echo: true
 #| output: true
 
 # 1. Filterung der relevanten Kraftstoffarten
