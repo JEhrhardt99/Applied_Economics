@@ -223,7 +223,7 @@ The weird observations do not correspond to the same stations at different point
 #| output: true
 
 # clear the environment except raw data df
-rm(list = setdiff(ls(), "df"))
+rm(list = setdiff(ls(), "df")) ### !!!HARAM!!!, change this before submission
 ```
 
 The analysis will only include diesel prices and E10 prices, hence, E5 prices should be omitted early on to save memory.

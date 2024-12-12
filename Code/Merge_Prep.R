@@ -8,7 +8,7 @@
 # Topic: Applied Economics - Fuel Tx Discount GER 2022
 # Date: 2024-11-24
 
-rm(list = ls())
+# rm(list = ls())
 
 # Load Libraries ----------------------------------------------------------
 
