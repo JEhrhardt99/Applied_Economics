@@ -139,7 +139,7 @@ t0 <- Sys.time()
 
 DiD_dy_comp_diesel <- feols(
   avg_diesel ~ i(centered_t, dummy_GER, ref = 0) +
-    i(centered_t, dummy_GER, ref = 0):neighbors_dummy | station_uuid + centered_t,
+    i(centered_t, dummy_GER, ref = 0):neighbors_dummy | Station + centered_t,
   data = df
 )
 
