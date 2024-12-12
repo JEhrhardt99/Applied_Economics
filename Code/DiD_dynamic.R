@@ -20,7 +20,9 @@ library(ggthemes)
 library(tidyverse)
 library(data.table)
 library(lubridate)
+library(xtable)
 library(fixest)
+library(Hmisc)
 
 # Set WD ------------------------------------------------------------------
 
@@ -36,6 +38,30 @@ getwd()
 # load the data only for the relevant time
 df <- fread("../../Data/Preprocessed/final_data.csv.gz")[date_only >= "2022-04-01" & date_only <= "2022-08-31"]
 
+# repeat the data labeling
+Hmisc::label(df$dummy_GER) <- "$GER_{i}$"
+Hmisc::label(df$dummy_FTD) <- "$FTD_{t}$"
+Hmisc::label(df$neighbors_count) <- "$X_{i}$"
+
+# competition dummy
+df$neighbors_dummy <- ifelse(df$neighbors_count > 0, 1, 0)
+Hmisc::label(df$neighbors_dummy) <- "$D_{X_{i}}$"
+
+df <- df %>%
+  rename(Station = station_uuid)
+
+
+
+# Dynamic DiD -------------------------------------------------------
+
+# Define the treatment date
+treatment_date <- as.IDate("2022-05-31")
+
+str(df)
+str(treatment_date)
+
+# Create the centered_t variable
+df[, centered_t := as.integer(date_only - treatment_date)]
 
 
 
@@ -48,12 +74,77 @@ df <- fread("../../Data/Preprocessed/final_data.csv.gz")[date_only >= "2022-04-0
 
 
 
+# Dynamic DiD Model for Diesel
+
+t0 <- Sys.time() # start time
+
+DiD_dy_diesel <- feols(
+  avg_diesel ~ i(centered_t, dummy_GER, ref = 0) | Station + centered_t,
+  data = df
+)
+
+t1 <- Sys.time()  # end time
+print(t1 - t0)    # how long did it take
+
+# Summarize results
+# summary(DiD_dy_diesel)
+
+# Plot the dynamic treatment effects
+coefplot(DiD_dy_diesel,
+         ci.width = "1%")
+
+
+rm(DiD_dy_diesel)
 
 
 
 
 
 
+
+
+# Dynamic DiD Model for E10
+
+t0 <- Sys.time() # start time
+
+# Dynamic DiD Model
+DiD_dy_e10 <- feols(
+  avg_e10 ~ i(centered_t, dummy_GER, ref = 0) | Station + centered_t,
+  data = df
+)
+
+t1 <- Sys.time()  # end time
+print(t1 - t0)    # how long did it take
+
+
+
+# Plot the dynamic treatment effects
+coefplot(DiD_dy_e10,
+         ci.width = "1%")
+
+rm(DiD_dy_e10)
+
+
+
+
+
+
+
+
+
+# Dynamic DiD Comp -------------------------------------------------------
+
+# Dynamic DiD Model with interaction of competition dummy
+t0 <- Sys.time()
+
+DiD_dy_comp_diesel <- feols(
+  avg_diesel ~ i(centered_t, dummy_GER, ref = 0) +
+    i(centered_t, dummy_GER, ref = 0):neighbors_dummy | station_uuid + centered_t,
+  data = df
+)
+
+t1 <- Sys.time()
+print(t1 - t0)
 
 
 

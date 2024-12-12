@@ -1,7 +1,7 @@
 # General Information -----------------------------------------------------
 
 
-# This Script will contains the main analysis
+# This Script contains the main analysis in the baseline DiD Model
 
 # Auhtor: Jannes Ehrhardt
 # Topic: Applied Economics - Fuel Tx Discount GER 2022
@@ -544,47 +544,6 @@ modelsummary(
 
 
 
-
-
-
-# DiD Dynamic ---------------------------------------------------
-
-
-# Dynamic DiD Approach
-df_dynamic <- df_period 
-
-# try with this and it will work
-# df_dynamic <- df_weeks_2
-
-# Define the treatment date
-treatment_date <- as.IDate("2022-05-31")
-
-str(df_dynamic)
-str(treatment_date)
-
-# Create the centered_t variable
-df_dynamic[, centered_t := as.integer(date_only - treatment_date)]
-
-# Dynamic DiD Model
-dynamic_did <- feols(
-  avg_diesel ~ i(centered_t, dummy_GER, ref = 0) | Station + centered_t,
-  data = df_dynamic
-)
-
-# Summarize results
-# summary(dynamic_did)
-
-# Plot the dynamic treatment effects
-coefplot(dynamic_did,
-         ci.width = "1%")
-
-
-
-# Dynamic DiD Model
-dynamic_did <- feols(
-  avg_e10 ~ i(centered_t, dummy_GER, ref = 0) | Station + centered_t,
-  data = df_dynamic
-)
 
 
 
