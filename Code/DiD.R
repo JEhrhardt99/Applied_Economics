@@ -41,7 +41,6 @@ getwd()
 
 # Load Data ---------------------------------------------------------------
 
-
 df <- fread("../../Data/Preprocessed/final_data.csv.gz")
 
 ## Data Prep ---------------------------------------------------------------
@@ -144,6 +143,13 @@ modelsummary(
 
 df_period <- df[date_only >= "2022-04-01" & date_only <= "2022-08-31"]
 
+# clear environment to free up memory
+rm(
+  df,
+  DiD_basic,
+  DiD_basic_d,
+  DiD_basic_e10
+   )
 
 
 ### Diesel ---------------------------------------------------------------
@@ -169,8 +175,6 @@ modelsummary(
   coef_map = var_labels, # Apply custom coefficient labels
   gof_map = gof_labels
 )
-
-
 
 
 # 2. DiD fixest ---------------------------------------------------
@@ -206,32 +210,23 @@ DiD_FE_d <- feols(
 summary(DiD_FE_d)
 
 
-
 DiD_FE_E10 <- feols(
   avg_e10 ~ dummy_GER:dummy_FTD | Station + date_only,
   data = df_period,
   vcov = ~Station
 )
 
-
 summary(DiD_FE_E10)
-
-
-
 
 models_FE <- list()
 models_FE[["$p_{it}$ (Diesel) FE"]] <- DiD_FE_d
 models_FE[["$p_{it}$ (E10) FE"]] <- DiD_FE_E10
 
-
 # Get available GoF keys
 get_gof(DiD_FE_E10)
 
-
 # Check clustering information
 attr(DiD_FE_E10, "fixef_vars")
-
-# Standard Errors are not clustered yet
 
 # Custom GoF labels: Include all desired GoF statistics
 gof_labels <- tribble(
@@ -262,7 +257,7 @@ modelsummary(
 # delete wrong models that used the hole year from the models list
 models <- models[-c(1,2)]
 
-# Generate modelsummary table comparing fixed effects vsno fixed effects
+# Generate modelsummary table comparing fixed effects vs no fixed effects
 modelsummary(
   c(models, models_FE),
   stars = c('***' = 0.01, '**' = 0.05, '*' = 0.1),
@@ -273,44 +268,23 @@ modelsummary(
 )
 
 
-
-# done:
-
-# next steps: Display this nicely in a table
-# include R2 within and look up the Meaning
-# make a table to compare with and without fixed effects for each fuel respectively
-# look up how to cluster standard errors in fixest
-# implement it
-
-
-# to do:
-
 # estimate FE model again with shorter time period arount the introduction point
 # => see if the point estimates are higher... First indicator for decline in pass through rate
 
 # Only than I can start with the competition metric and the dynamic DiD Approach
 
 
-
 ## FE with shorter time period ---------------------------------------------------------------
 
 # 2 Weeks around Introduction
-df_weeks_2 <- df[date_only >= "2022-05-18" & date_only <= "2022-06-14"]
-
-# rename station_uuid to Station so it looks nicer in the output later when adding clustered Standard Errors
-df_weeks_2 <- df_weeks_2 %>%
-  rename(Station = station_uuid)
-
+df_weeks_2 <- df_period[date_only >= "2022-05-18" & date_only <= "2022-06-14"]
 
 
 # test: use fixest panel() function to let R now who the individuals are and what the time is
 # this is needed since we have an unbalenced panel
 # Mr. Huse said that this is necceaary to get the correct standard errors, but it does not change anything
 
-
 panel(df_weeks_2, panel.id = c("Station", "date_only"))
-
-
 
 # FE Model with 2 Weeks around the introduction of the FTD in Germany (Diesel)
 DiD_FE_d_w_2 <- feols(
@@ -335,12 +309,7 @@ summary(DiD_FE_E10)
 models_FE[["$p_{it}$ (Diesel) FE W2"]] <- DiD_FE_d_w_2
 models_FE[["$p_{it}$ (E10) FE W2"]] <- DiD_FE_E10_w_2
 
-
 options("modelsummary_format_numeric_latex" = "plain")
-
-# create a label for the dummy term variable 
-
-
 
 # Generate modelsummary table
 modelsummary(
@@ -357,6 +326,16 @@ modelsummary(
 
 
 
+
+# clean environment to free up memory
+# everything without FE is not needed any more
+
+rm(
+  DiD_basic_d_1,
+  DiD_basic_e10_1,
+  DiD_feols,
+  models
+)
 
 
 
