@@ -26,14 +26,10 @@ library(Hmisc)
 
 # Set WD ------------------------------------------------------------------
 
-if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
-  setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-}
-# check if wd is the root directory
+# check if wd is the code folder of the project
 getwd() 
 
 # Load Data ---------------------------------------------------------------
-
 
 # load the data only for the relevant time
 df <- fread("../../Data/Preprocessed/final_data_small.csv.gz")[date_only >= "2022-04-01" & date_only <= "2022-08-31"]
@@ -48,7 +44,7 @@ df$neighbors_dummy <- ifelse(df$neighbors_count > 0, 1, 0)
 Hmisc::label(df$neighbors_dummy) <- "$D_{X_{i}}$"
 
 df <- df %>%
-  rename(Station = station_id)
+  dplyr::rename(Station = station_id)
 
 
 
@@ -130,8 +126,6 @@ rm(DiD_dy_e10)
 
 
 
-
-
 # Dynamic DiD Comp -------------------------------------------------------
 
 # Dynamic DiD Model with interaction of competition dummy
@@ -148,7 +142,7 @@ print(t1 - t0)
 
 
 
-
+###
 
 
 
