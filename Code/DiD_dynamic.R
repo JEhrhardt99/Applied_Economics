@@ -8,7 +8,7 @@
 # Date: 2024-12-13
 
 # clear environment
-# rm(list = ls()) # Haram!!!
+# rm(list = ls()) # !!!Haram!!!
 
 # Load Libraries ----------------------------------------------------------
 
@@ -36,7 +36,7 @@ getwd()
 
 
 # load the data only for the relevant time
-df <- fread("../../Data/Preprocessed/final_data.csv.gz")[date_only >= "2022-04-01" & date_only <= "2022-08-31"]
+df <- fread("../../Data/Preprocessed/final_data_small.csv.gz")[date_only >= "2022-04-01" & date_only <= "2022-08-31"]
 
 # repeat the data labeling
 Hmisc::label(df$dummy_GER) <- "$GER_{i}$"
@@ -48,7 +48,7 @@ df$neighbors_dummy <- ifelse(df$neighbors_count > 0, 1, 0)
 Hmisc::label(df$neighbors_dummy) <- "$D_{X_{i}}$"
 
 df <- df %>%
-  rename(Station = station_uuid)
+  rename(Station = station_id)
 
 
 
