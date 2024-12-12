@@ -8,7 +8,7 @@
 # Date: 2024-12-05
 
 # clear environment
-rm(list = ls())
+rm(list = ls()) # Haram!!!
 
 # Load Libraries ----------------------------------------------------------
 
@@ -634,7 +634,7 @@ dynamic_did <- feols(
 )
 
 # Summarize results
-summary(dynamic_did)
+# summary(dynamic_did)
 
 # Plot the dynamic treatment effects
 coefplot(dynamic_did,
@@ -642,7 +642,11 @@ coefplot(dynamic_did,
 
 
 
-
+# Dynamic DiD Model
+dynamic_did <- feols(
+  avg_e10 ~ i(centered_t, dummy_GER, ref = 0) | Station + centered_t,
+  data = df_dynamic
+)
 
 
 

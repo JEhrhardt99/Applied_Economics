@@ -143,8 +143,6 @@ df_avg_diesel_wide |>
                                     face = "bold"))
 
 
-
-
 df_avg_e10_wide |>
   ggplot(aes(x = date_only)) +
   geom_line(aes(y = FRA, color = "France")) +
